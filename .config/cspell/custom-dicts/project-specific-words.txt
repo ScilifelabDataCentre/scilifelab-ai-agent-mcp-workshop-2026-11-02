@@ -1,0 +1,34 @@
+# Project-specific words
+#
+# Add terms that are valid for your repository but
+# that are not covered by any of CSpell's available dictionaries.
+# 
+# One word per line, in alphabetical order.
+# ---
+Berserkers
+Berzelius
+Bitwarden
+citability
+Distributables
+Dockerfiles
+Figshare
+jsquery
+Kivy
+logfmt
+lycheecache
+lycheeignore
+mdlint
+Miarka
+MSBFS
+nerdctl
+Pandoc
+pandoc
+pasteable
+Pinga
+prek
+RACI
+RORID
+sarif
+trivy
+Zenodo
+ZSON

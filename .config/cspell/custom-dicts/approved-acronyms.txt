@@ -1,0 +1,29 @@
+# Approved acronyms
+# 
+# Add acronyms that are valid for your repository but
+# that are not covered by any of CSpell's available dictionaries.
+# 
+# One acronym per line, in alphabetical order.
+# ---
+
+# Research infrastructure and programmes
+DDLS
+EMBL
+EOSC
+GBIF
+NBIS
+SBDI
+
+# Compute infrastructure
+LUMI
+NAISS
+PRACE
+SNIC
+SUPR
+UPPMAX
+
+# Identifiers and registries
+NCBI
+ORCID
+RRID
+RRIDs

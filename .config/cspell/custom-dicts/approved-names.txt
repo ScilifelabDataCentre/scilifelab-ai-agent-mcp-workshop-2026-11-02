@@ -1,0 +1,17 @@
+# Approved names
+#
+# Personal and organisation names valid across this repository.
+# 
+# Add names that are valid for your repository but
+# that are not covered by any of CSpell's available dictionaries.
+#
+# Note: If a name closely resembles a word in an enabled language dictionary,
+# consider adding the name to a file- or folder specific rule in the cspell-config.yml file.
+#
+# One name per line, in alphabetical order.
+# ---
+Aishling
+lycheeverse
+Odén
+SciLifeLab
+Österbo

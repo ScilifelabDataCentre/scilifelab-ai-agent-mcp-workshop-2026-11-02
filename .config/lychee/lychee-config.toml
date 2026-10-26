@@ -1,0 +1,53 @@
+# lychee configuration
+# There are 2 sections:
+# - General config: Configuration that applies to all links.
+# - Host specific config: Configuration that should be applied to only specific links.
+#
+# See lychee's own example: https://github.com/lycheeverse/lychee/blob/master/lychee.example.toml
+
+#############################  General config  #############################
+
+# Enable link caching - avoid checking the same links on multiple runs
+cache = true
+
+# Ignore these status codes from the cache - might want to check them again
+cache_exclude_status = "400.."
+
+# Exclude URLs from check (regex)
+# https://lychee.cli.rs/guides/cli/#--exclude
+exclude = [
+    'https://doi.org/10.5281/zenodo.22706806', # will not change
+    '^https://github.com/ScilifelabDataCentre/k1h-platform-docs/', # private repo
+    '.*#metadata-for-\{\{service-name\}\}$', # template header with placeholder
+]
+
+# Include more file types
+# Defaults are included in the list (v0.24.2)
+# https://lychee.cli.rs/guides/cli/#--extensions
+extensions = ["cff", "css", "htm", "html", "jsonc", "markdown", "md", "mdown", "mdwn", "mdx", "mkd", "mkdn", "mkdown", "toml", "txt", "xml", "yaml", "yml"] # cspell:disable-line
+
+# Do not skip hidden directories and files (e.g. .github/, .config/, etc)
+# https://lychee.cli.rs/guides/cli/#--hidden
+hidden = true
+
+# Enable the checking of fragments in links
+# https://lychee.cli.rs/guides/cli/#--include-fragments
+include_fragments = "anchor-only" # links to headers
+
+# Don't show interactive progress bar while checking links.
+# https://lychee.cli.rs/guides/cli/#-n---no-progress
+no_progress = true
+
+# Root path to use when checking absolute local links
+# https://lychee.cli.rs/guides/cli/#--root-dir
+root_dir = "." # working directory
+
+# Verbose program output
+# Accepts log level: "error", "warn", "info", "debug", "trace"
+# https://lychee.cli.rs/guides/cli/#-v---verbose
+verbose = "info"
+
+#############################  Host specific config  #############################
+
+# Customize hosts here
+# See https://github.com/lycheeverse/lychee/blob/master/lychee.example.toml#L230

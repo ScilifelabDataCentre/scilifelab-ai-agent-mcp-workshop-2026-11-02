@@ -1,0 +1,48 @@
+// Example Renovate configuration for grouping dependencies
+// Either use as inspiration or copy-paste into your configuration
+// There are also grouping presets (https://docs.renovatebot.com/presets-group/)
+// that you could use in your configuration. Use with care.
+{
+  // The schema is used for editor autocomplete and validation of Renovate config
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>ScilifelabDataCentre/data-centre-template//.config/renovate/default.jsonc#v1.1.0",
+  ],
+  "packageRules": [
+    // Group Python dev tooling
+    {
+      "description": "Group minor and patch updates for Python dev tools.",
+      "matchDatasources": ["pypi"], // Instead of matchCategory to line up with the minimumReleaseAge rule
+      "matchPackageNames": [
+        "black",
+        "coverage",
+        "flake8",
+        "pre-commit",
+        "pylint",
+        "pytest",
+        "pytest-*",
+        "ruff",
+      ],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Python dev dependencies (minor and patch)",
+      "groupSlug": "python-dev-tools", // Branch prefix to these group PRs
+    },
+    // Group Docker image updates
+    {
+      "description": "Group minor and patch Docker image updates",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Docker images (minor and patch)",
+      "groupSlug": "docker-minor-patch", // Branch prefix to these group PRs
+    },
+    // Group npm dev dependencies
+    {
+      "description": "Group minor and patch npm updates",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "npm dev dependencies (minor and patch)",
+      "groupSlug": "npm-dev-minor-patch", // Branch prefix to these group PRs
+    },
+  ],
+}

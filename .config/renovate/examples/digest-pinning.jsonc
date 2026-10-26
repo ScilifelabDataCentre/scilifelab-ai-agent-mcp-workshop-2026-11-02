@@ -1,0 +1,21 @@
+// Example of how to activate digest pinning for GitHub Actions
+// and including grouping to partially mitigate flooding of update PRs
+// Either use as inspiration or copy-paste into your configuration
+{
+  // The schema is used for editor autocomplete and validation of Renovate config
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>ScilifelabDataCentre/data-centre-template//.config/renovate/default.jsonc#v1.1.0",
+    "helpers:pinGitHubActionDigests",
+  ],
+  "packageRules": [
+    // Grouping of digest updates for GitHub Actions
+    // pinDigest is for the initial pinning, digest is for subsequent updates
+    {
+      "description": "Group digest updates for GitHub Actions (minor and patch grouped by preset)",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["digest", "pinDigest"],
+      "groupName": "GitHub Actions (digest)",
+    },
+  ],
+}

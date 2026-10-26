@@ -1,0 +1,7 @@
+{
+  "devDependencies": {
+    "@cspell/dict-en-gb": "^5.0.30",
+    "@cspell/dict-people-names": "^1.1.16",
+    "@cspell/dict-sv": "^2.3.2"
+  }
+}

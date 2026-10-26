@@ -1,0 +1,94 @@
+// Custom Renovate Preset for the SciLifeLab Data Centre
+// This preset extends the recommended configuration with some of the presets from config:best-practices
+// and some custom settings.
+// See the .config/renovate/README.md for instructions on how to use this preset in your repository.
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json", // Provides editor autocomplete and validation for Renovate config
+  "description": "Custom Renovate Preset for the SciLifeLab Data Centre",
+  "extends": [
+    "config:recommended", // The recommended default presets
+    "abandonments:recommended", // Packages without release for 1 year are treated as abandoned
+    ":gitSignOff", // Add a "Signed-off-by" line to commit messages (not cryptographic commit signing)
+    ":maintainLockFilesWeekly", // Update lockfiles weekly (Monday mornings)
+    ":renovatePrefix", // Default: All branches are prefixed with "renovate/"
+  ],
+  "dependencyDashboard": true, // Default via config:recommended - See README
+  "dependencyDashboardOSVVulnerabilitySummary": "none", // Experimental; pinned so a default change can't surprise us
+  "minimumReleaseAge": "3 days", // Only update packages that have been released for at least 3 days
+  "minimumReleaseAgeBehaviour": "timestamp-optional", // Change from the default timestamp-required; otherwise Renovate might miss some updates
+  "labels": ["type: dependency"], // Add the "type: dependency" label to all PRs
+  "schedule": ["* 0-6 * * *"], // Allow new Renovate branches between 00:00 and 06:59 - does not cause or trigger Renovate to run
+  "timezone": "Europe/Stockholm", // Use Stockholm time for 'schedule'
+  "ignoreUnstable": true, // Default: Don't update to unstable versions, unless already unstable
+  "automerge": false, // Default: Disable automerging, always wait for humans to merge PRs. cspell:ignore automerging
+  "prHourlyLimit": 1, // Renovate can only open 1 PR per hour
+  "prConcurrentLimit": 10, // Limit the number of open PRs to 10 (vulnerability PRs bypass it)
+  "vulnerabilityAlerts": {
+    "addLabels": ["type: security"], // Security PRs bypass schedule + limits
+  },
+  "packageRules": [
+    // minimumReleaseAge is not supported (always/generally) for these update types
+    // Add rule to avoid them being held indefinitely
+    // Digest rule is inert unless a repo enables digest pinning - needed as soon as it does
+    // Might technically not be needed after the addition of minimumReleaseAgeBehaviour, but this is explicit and to avoid silently breaking
+    {
+      "description": "Bypass minimumReleaseAge rule for some update types.",
+      "matchUpdateTypes": [
+        "pin",
+        "digest",
+        "pinDigest",
+        "lockFileMaintenance",
+        "rollback",
+        "bump",
+        "replacement",
+      ],
+      "minimumReleaseAge": null,
+    },
+    // Label SemVer updates by update type
+    {
+      "description": "Label all major updates.",
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["update: major"],
+    },
+    {
+      "description": "Label all minor updates.",
+      "matchUpdateTypes": ["minor"],
+      "addLabels": ["update: minor"],
+    },
+    {
+      "description": "Label all patch updates.",
+      "matchUpdateTypes": ["patch"],
+      "addLabels": ["update: patch"],
+    },
+    // GitHub Actions rule: Label and group
+    {
+      "description": "Label all GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "addLabels": ["github-actions"],
+    },
+    {
+      "description": "Group minor and patch GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "GitHub Actions (minor and patch)",
+    },
+    // Python rule: Label
+    {
+      "description": "Label Python specific updates",
+      "matchCategories": ["python"],
+      "addLabels": ["python"],
+    },
+    // Docker rule: Label
+    {
+      "description": "Label Dockerfile and docker-compose updates",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "addLabels": ["docker"],
+    },
+    // npm rule: Label
+    {
+      "description": "Label npm specific updates",
+      "matchManagers": ["npm"],
+      "addLabels": ["npm"],
+    },
+  ],
+}

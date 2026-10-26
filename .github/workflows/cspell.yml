@@ -1,0 +1,41 @@
+# Spell checking using CSpell (cspell-action)
+# Link: https://github.com/marketplace/actions/cspell-action
+#
+# See .config/cspell/ for information about
+# this workflow and the CSpell configuration
+---
+name: Spell Check with CSpell
+
+on:
+  pull_request: # Trigger when PR is opened or updated
+
+permissions:
+  contents: read
+
+jobs:
+  spellcheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repo to access the files for spell checking
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false # We don't need the token in subsequent steps
+          fetch-depth: 0 # cspell needs the PR base commit to diff against
+
+      # Some dictionaries require installation here
+      # and import in the .config/cspell/cspell-config.yml file
+      - name: Install CSpell Dictionaries
+        run: npm ci --prefix .config/cspell --ignore-scripts
+
+      - name: Run CSpell
+        uses: streetsidesoftware/cspell-action@v9
+        with: # See link at top of file for more configuration options
+          files: "" # Include all file types (default)
+          check_dot_files: true # Include dotfiles in spell check (incl. .config/, .github/, etc.)
+          incremental_files_only: true # Only spell check PR diff (default)
+          config: ".config/cspell/cspell-config.yml" # Custom CSpell config file
+          inline: error # Show spelling issues as inline errors in PR
+          suggestions: true # Show suggestions for misspelled words
+          strict: true # Fail action if misspelled words are found (default)

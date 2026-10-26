@@ -1,0 +1,235 @@
+# Configuration file for CSpell
+# CSpell checks this config file too
+# so we may need to use CSpell's ignore functionality in some cases,
+# e.g. before the ignoreRegExpList below.
+---
+# ---------------------------------------------------------------------------
+# 1. Core settings
+# ---------------------------------------------------------------------------
+# Version of setting file. Always 0.2
+version: "0.2"
+
+# Use British English and Swedish
+# Note: The British English dictionary includes some US spellings
+language: en-gb,sv
+
+# Spell checking is case-sensitive: Treat differently capitalised words as distinct.
+caseSensitive: true
+
+# Exclude files and directories matched by .gitignore.
+useGitignore: true
+
+# ---------------------------------------------------------------------------
+# 2. Installed dictionary packages
+# ---------------------------------------------------------------------------
+
+# Load dictionary extensions installed through .config/cspell/package.json.
+# The GitHub Actions workflow installs them before running CSpell.
+# For local installation instructions, see .config/cspell/README.md.
+import:
+  - "@cspell/dict-en-gb/cspell-ext.json"
+  - "@cspell/dict-people-names/cspell-ext.json"
+  - "@cspell/dict-sv/cspell-ext.json"
+
+# ---------------------------------------------------------------------------
+# 3. Enabled dictionaries
+# ---------------------------------------------------------------------------
+
+# Dictionaries enabled globally for all checked files.
+# Directory-specific dictionaries are enabled later under overrides.
+# The dictionary extensions imported in section 2 are enabled automatically.
+
+dictionaries:
+  # Custom dictionaries defined in section 4 below.
+  - approved-acronyms
+  - approved-names
+  - forbidden-words
+  - project-specific-words
+
+  # Dictionaries bundled with CSpell
+  - companies
+  - cpp-compound-words
+  - fonts
+  - fullstack
+  - k8s
+  - latex
+  - python
+  - python-common
+  - ruby
+  - sql
+
+# ---------------------------------------------------------------------------
+# 4. Custom dictionary definitions
+# ---------------------------------------------------------------------------
+
+# Register custom dictionary files.
+# Dictionaries are enabled globally in section 3 or selectively under overrides.
+dictionaryDefinitions:
+  # Globally enabled dictionaries
+  - name: approved-acronyms
+    path: ./custom-dicts/approved-acronyms.txt
+    addWords: true
+
+  - name: approved-names
+    path: ./custom-dicts/approved-names.txt
+    addWords: true
+
+  - name: forbidden-words
+    path: ./custom-dicts/forbidden-words.txt
+
+  - name: project-specific-words
+    path: ./custom-dicts/project-specific-words.txt
+    addWords: true
+
+  # Directory-specific dictionaries enabled under overrides
+  # - name: <directory-name>-words
+  #   path: ./custom-dicts/<directory-name>-words.txt
+  #   addWords: true
+
+# ---------------------------------------------------------------------------
+# 5. Ignored files
+# ---------------------------------------------------------------------------
+
+# Paths to ignore during spell checking
+ignorePaths:
+  # Package manifests and generated lockfiles.
+  - "**/package.json"
+  - "**/package-lock.json"
+  - "**/pnpm-lock.yaml"
+
+  # Custom dictionary sources are maintained separately.
+  - "**/custom-dicts/*.txt"
+
+  # Repository path and ownership rules.
+  - "**/.gitignore"
+  - "**/CODEOWNERS"
+
+  # Tool configuration containing only selectors, identifiers and metadata.
+  # - <some path here>
+
+# ---------------------------------------------------------------------------
+# 6. Language-specific settings
+# ---------------------------------------------------------------------------
+
+# Language settings for specific file types.
+languageSettings:
+  # Enable CSS terminology and allow valid CSS spelling.
+  - languageId: css,scss
+    dictionaries:
+      - css
+    ignoreWords:
+      - gray # cspell:disable-line
+      - color # cspell:disable-line
+      - colors # cspell:disable-line
+      - behavior # cspell:disable-line
+
+  # Enable Docker terminology and accept differently cased identifiers.
+  - languageId: dockerfile
+    caseSensitive: false
+    dictionaries:
+      - docker
+
+  # Enable HTML terminology for HTML and XML files.
+  - languageId: html,xml
+    dictionaries:
+      - html
+    ignoreRegExpList:
+      # Allow the CSS property spelling inside double-quoted inline styles.
+      - '/(?<=\bstyle\s*=\s*"[^"]*)\bcolor(?=:)/g' # cspell:disable-line
+      - '/(?<=\bstyle\s*=\s*''[^'']*)\bcolor(?=:)/g' # cspell:disable-line
+
+  # Enable programming terminology for JavaScript files.
+  - languageId: javascript,javascriptreact
+    dictionaries:
+      - typescript
+
+  # Handle raw HTML and Mermaid inside markdown
+  - languageId: markdown
+    ignoreRegExpList:
+      # Allow the CSS property inside Mermaid class definitions.
+      - '/(?<=^\s*classDef\b[^\n]*)\bcolor(?=:)/gm' # cspell:disable-line
+
+      # Ignore double-quoted source attribute values.
+      - '/\bsrc\s*=\s*["''][^"'']*["'']/g' # cspell:disable-line
+
+      # Allow the US CSS keyword
+      - '/(?<=\bclass\s*=\s*["''][^"'']*)\bgray\b/g' # cspell:disable-line
+
+      # Allow the CSS property spelling inside double-quoted inline styles.
+      - '/(?<=\bstyle\s*=\s*"[^"]*)\bcolor(?=:)/g' # cspell:disable-line
+      - '/(?<=\bstyle\s*=\s*''[^'']*)\bcolor(?=:)/g' # cspell:disable-line
+
+# ---------------------------------------------------------------------------
+# 7. Global ignore patterns
+# ---------------------------------------------------------------------------
+
+# Patterns that may appear across multiple file types.
+ignoreRegExpList:
+  # Links and addresses
+  - MarkdownLink # Ignore link targets but continue checking visible link text.
+  - Url # Ignore complete URLs, such as https://www.example.com
+  - '/\b[a-z0-9]+(?:-[a-z0-9]+)*\.[a-z]{2,}\b/gi' # cspell:disable-line # Ignore bare domain names.
+  - '/scilifelab\.[a-z0-9.-]+/gi' # cspell:disable-line # Ignore SciLifeLab domain names.
+  - '/@scilifelab\./gi' # cspell:disable-line # Ignore SciLifeLab email domains.
+
+  # Project-specific identifiers and paths.
+  - "/ddls[a-zA-Z0-9._-]*/g" # cspell:disable-line # Ignore DDLS identifiers and their suffixes.
+  - "/#datacentre_[a-z0-9_-]+/g" # cspell:disable-line # Ignore Data Centre Slack channels
+
+  # DOI identifiers.
+  - "/DOI:.*/g" # Ignore text containing a labelled DOI reference.
+
+  # Phrases
+  - "ScilifelabDataCentre GitHub Organisation" # cspell:disable-line
+
+# ---------------------------------------------------------------------------
+# 8. File- and directory-specific settings
+# ---------------------------------------------------------------------------
+
+overrides:
+  # -------------------------------------------------------------------------
+  # Directory-specific settings
+  # -------------------------------------------------------------------------
+  # - filename: "<path-to-directory>"
+  #   dictionaries:
+  #     - <directory-name>-words # This is registered in section 4 above
+  #   ignoreRegExpList:
+  #     - <some regular expression>
+
+  # -------------------------------------------------------------------------
+  # File-specific settings
+  # -------------------------------------------------------------------------
+  # It might also be worth splitting this up into sections for specific file
+  # types, e.g. one part for JSON, one for HTML, etc.
+  # The structure should be the same as in the Directory-specific settings
+  # Use ignoreWords: to override the forbidden-words.txt dictionary
+  # -------------------------------------------------------------------------
+  # CITATION files
+  # -------------------------------------------------------------------------
+  - filename:
+      - "**/CITATION.cff"
+      - "**/CITATION.template.cff"
+    words:
+      - orcid # cspell:disable-line
+      - zenodo # cspell:disable-line
+  # -------------------------------------------------------------------------
+  # GitHub Actions
+  # -------------------------------------------------------------------------
+  - filename: "**/.github/**/*.{yml,yaml}"
+    words:
+      # Allow repository-specific workflow identifiers.
+      - ScilifelabDataCentre # cspell:disable-line
+      - sarif # cspell:disable-line
+    ignoreRegExpList:
+      - '/^\s*uses:\s*\S+/gm' # Ignore GitHub Action identifiers.
+      - '/^\s*images:\s*.*$/gm' # Ignore container image values.
+      - '/^\s*image-ref:\s*.*$/gm' # Ignore image reference values.
+  # -------------------------------------------------------------------------
+  # Renovate related files
+  # -------------------------------------------------------------------------
+  - filename:
+      - "**/.github/renovate.jsonc"
+      - "**/.config/renovate/**"
+    ignoreRegExpList:
+      - "/github>ScilifelabDataCentre\\/data-centre-template\\/\\/\\.config\\/renovate\\/default\\.jsonc#[^#\\s]+/" # cspell:disable-line # Ignore path to the preset
+      - "ScilifelabDataCentre\\/development-guidelines" # cspell:disable-line
