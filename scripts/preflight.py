@@ -25,7 +25,7 @@ def main() -> int:
 
     required = [
         "Dockerfile", "start-script.sh", "requirements.txt", ".dockerignore", ".env.example",
-        ".serve-template.json", "README.md", "RUNBOOK.md",
+        ".serve-template.json", "README.md",
         "Section_1_LangGraph/langgraph_lab.ipynb", "Section_1_LangGraph/requirements.txt",
         "Section_2_MCP/server.py", "Section_2_MCP/1-mcp-hands-on/mcp_literature_review_lab.ipynb",
         "scripts/supervisord.conf", "scripts/start_jupyter_when_ready.sh",
