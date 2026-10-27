@@ -186,11 +186,7 @@ docker run -d \
   ghcr.io/scilifelabdatacentre/scilifelab-ai-agent-mcp-workshop-2026-11-02:latest
 ```
 
-Then open **http://localhost:8888** in your browser and navigate to `langgraph_lab.ipynb`.
-
----
-
-
+Then open **http://localhost:7860** in your browser.
 
 ---
 
