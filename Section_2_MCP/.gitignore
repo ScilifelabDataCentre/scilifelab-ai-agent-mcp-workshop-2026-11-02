@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+work/
+.ipynb_checkpoints/
+fixtures/cache/*.json
