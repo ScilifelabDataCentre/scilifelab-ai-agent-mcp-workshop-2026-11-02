@@ -1,0 +1,13 @@
+.git
+.github
+.config
+docs
+instructions
+/tests
+/work
+**/.env
+**/__pycache__
+**/*.pyc
+**/.ipynb_checkpoints
+**/work
+*.zip

@@ -1,2 +1,10 @@
 node_modules/
 .lycheecache
+.env
+**/.env
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+work/
+*.zip
