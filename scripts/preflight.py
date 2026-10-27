@@ -30,7 +30,8 @@ def main() -> int:
         "Section_2_MCP/server.py", "Section_2_MCP/1-mcp-hands-on/mcp_literature_review_lab.ipynb",
         "scripts/supervisord.conf", "scripts/start_jupyter_when_ready.sh",
         "scripts/start_combined_docker.sh", "scripts/mcp_health.py", "scripts/workshop_healthcheck.py",
-        ".github/workflows/combined-image.yml",
+        "tests/__init__.py", "tests/test_architecture_launcher.py", "tests/test_combined_setup.py",
+        "Section_2_MCP/tests/__init__.py", ".github/workflows/combined-image.yml",
     ]
     for rel in required:
         require((root / rel).is_file(), f"Found {rel}", f"Missing {rel}")
@@ -103,6 +104,20 @@ def main() -> int:
         require(pin in requirements, f"Combined requirements include {pin}", f"Missing {pin}")
 
     workflow = (root / ".github/workflows/combined-image.yml").read_text(encoding="utf-8")
+    require("git diff --name-only" in workflow and "needs: changes" in workflow
+            and "if: needs.changes.outputs.image == 'true'" in workflow,
+            "CI gates expensive work on changed image inputs", "Workflow must skip builds for non-image changes")
+    require("Dockerfile|requirements.txt|start-script.sh" in workflow
+            and ".github/workflows/combined-image.yml|scripts/*|tests/*" in workflow
+            and "Section_1_LangGraph/*|Section_2_MCP/*" in workflow,
+            "CI watches all combined-image inputs", "Workflow change detection must include every image input")
+    require("README.md" not in workflow and "RUNBOOK.md" not in workflow and "docs/*" not in workflow,
+            "Root documentation does not trigger image builds", "Do not classify root documentation as an image input")
+    require("python -m unittest discover -s Section_2_MCP/tests -t Section_2_MCP -v" in workflow,
+            "CI uses explicit importable MCP test paths", "Workflow must discover MCP tests from the repository root")
+    require('--cache-from "type=gha,scope=combined-workshop-${ARCH}"' in workflow
+            and '--cache-to "type=gha,mode=min,scope=combined-workshop-${ARCH}"' in workflow,
+            "CI caches each architecture separately", "Workflow must use separate amd64/arm64 Buildx caches")
     require("for ARCH in amd64 arm64" in workflow and '--platform "linux/${ARCH}"' in workflow,
             "CI builds linux/amd64 and linux/arm64", "Workflow must build both architectures")
     require("setup-qemu-action" in workflow, "CI enables ARM64 smoke-test emulation", "Workflow must set up QEMU for ARM64")

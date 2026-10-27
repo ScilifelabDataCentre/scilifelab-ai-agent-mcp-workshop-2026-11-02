@@ -102,6 +102,10 @@ The included `.github/workflows/combined-image.yml` workflow provides the comple
 3. Push or merge to `main`, or run **Combined workshop image** manually with **Run workflow**, to publish to GHCR.
 4. Open the workflow summary and copy the exact image reference.
 
+CI first checks which files changed. A commit limited to root documentation or repository metadata (for example `README.md`, `RUNBOOK.md`, `CITATION.cff`, or `docs/`) skips Python tests, Docker builds, smoke tests, and publication. Changes under either workshop directory—including notebooks and section-local README files—still require a new tested image because those files are copied into it. A mixed documentation/code change runs the full checks. **Run workflow** always forces the full validation and build path.
+
+Buildx reuses separate GitHub Actions caches for amd64 and arm64. This usually avoids reinstalling unchanged dependencies; it does not skip tests or smoke tests when image content changes.
+
 Tags contain the UTC time, commit SHA, run number, and attempt. Each published tag is a multi-architecture manifest containing both variants, so Docker automatically selects arm64 on ARM hosts and amd64 on Intel/AMD hosts and Serve. The workflow never publishes `latest`, and it does not push an image until these checks pass:
 
 - combined Serve preflight and MCP tests;
@@ -159,9 +163,8 @@ Section 1 scientific packages and Session 2 MCP/Deep Agents packages are retaine
 
 ```bash
 python scripts/preflight.py --strict
-python -m unittest discover -s tests -v
-cd Section_2_MCP
-python -m unittest discover -s tests -v
+python -m unittest discover -s tests -t . -v
+python -m unittest discover -s Section_2_MCP/tests -t Section_2_MCP -v
 ```
 
 See [Section 1 notes](Section_1_LangGraph/README.md), [Session 2 notes](Section_2_MCP/README.md), and the [combined runbook](RUNBOOK.md) for workshop-specific details.
