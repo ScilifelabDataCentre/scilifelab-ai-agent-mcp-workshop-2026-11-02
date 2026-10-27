@@ -88,12 +88,11 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install MCP test dependencies
-        run: python -m pip install -r Section_2_MCP/requirements-server.txt
+        run: python -m pip install -r Section_2_MCP/requirements-server.txt python-dotenv==1.2.2
       - name: Validate repository and MCP tests
         run: |
           python scripts/preflight.py --strict
           python -m unittest discover -s tests -t . -v
-          python -m unittest discover -s Section_2_MCP/tests -t Section_2_MCP -v
       - name: Enable ARM64 emulation for build and smoke tests
         uses: docker/setup-qemu-action@v3
         with:
@@ -141,7 +140,7 @@ jobs:
               -p 7860:7860 "${IMAGE_REF}-${ARCH}"
             test "$(docker exec "${NAME}" id -u)" = "1000"
             test "$(docker exec "${NAME}" uname -m)" = "${EXPECTED_MACHINE}"
-            docker exec "${NAME}" python -c "from pathlib import Path; root=Path('/home/workshop/app'); assert (root/'Section_1_LangGraph/langgraph_lab.ipynb').is_file(); assert (root/'Section_2_MCP/1-mcp-hands-on/mcp_literature_review_lab.ipynb').is_file()"
+            docker exec "${NAME}" python -c "from pathlib import Path; root=Path('/home/workshop/app'); assert (root/'Section_1_LangGraph/langgraph_lab.ipynb').is_file(); assert (root/'Section_2_MCP/1-mcp-hands-on/mcp_literature_review_lab.ipynb').is_file(); assert not any((root/path).exists() for path in ('Section_2_MCP/Dockerfile', 'Section_2_MCP/scripts', 'Section_2_MCP/tests', 'Section_2_MCP/.github'))"
             READY=0
             for i in $(seq 1 120); do
               if curl --fail --silent --show-error http://127.0.0.1:7860/login >/dev/null; then
@@ -166,19 +165,22 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish both architectures and the multi-architecture manifest
+      - name: Publish one multi-architecture manifest
         if: github.event_name != 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
           IMAGE_REF="${{ steps.image.outputs.ref }}"
           IMAGE_NAME="${IMAGE_REF%:*}"
-          docker push "${IMAGE_REF}-amd64"
-          docker push "${IMAGE_REF}-arm64"
-          docker buildx imagetools create \
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --cache-from "type=gha,scope=combined-workshop-amd64" \
+            --cache-from "type=gha,scope=combined-workshop-arm64" \
+            --provenance=false \
+            --sbom=false \
             -t "${IMAGE_REF}" \
             -t "${IMAGE_NAME}:latest" \
-            "${IMAGE_REF}-amd64" "${IMAGE_REF}-arm64"
+            --push .
           for MANIFEST_REF in "${IMAGE_REF}" "${IMAGE_NAME}:latest"; do
             docker buildx imagetools inspect "${MANIFEST_REF}" | tee /tmp/combined-manifest.txt
             grep -q 'linux/amd64' /tmp/combined-manifest.txt

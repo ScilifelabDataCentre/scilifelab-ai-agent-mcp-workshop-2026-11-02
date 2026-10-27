@@ -9,7 +9,7 @@ from pathlib import Path
 from unittest import mock
 
 from litreview import config, europepmc
-from tests.fakes import CITATIONS_PAYLOAD, PAPER_PAYLOAD, SEARCH_PAYLOAD
+from tests.section_2_mcp.fakes import CITATIONS_PAYLOAD, PAPER_PAYLOAD, SEARCH_PAYLOAD
 
 
 class CacheTestCase(unittest.TestCase):

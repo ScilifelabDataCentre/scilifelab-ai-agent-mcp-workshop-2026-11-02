@@ -1,0 +1,167 @@
+diff --git a/.github/workflows/combined-image.yml b/.github/workflows/combined-image.yml
+index a7879eb..4df1174 100644
+--- a/.github/workflows/combined-image.yml
++++ b/.github/workflows/combined-image.yml
+@@ -16,9 +16,72 @@ concurrency:
+   cancel-in-progress: false
+ 
+ jobs:
++  changes:
++    name: Check image inputs
++    runs-on: ubuntu-latest
++    timeout-minutes: 5
++    permissions:
++      contents: read
++    outputs:
++      image: ${{ steps.filter.outputs.image }}
++    steps:
++      - uses: actions/checkout@v4
++        with:
++          fetch-depth: 0
++      - name: Detect changes that affect the published image
++        id: filter
++        shell: bash
++        env:
++          EVENT_NAME: ${{ github.event_name }}
++          BEFORE_SHA: ${{ github.event.before }}
++          BASE_REF: ${{ github.base_ref }}
++        run: |
++          set -euo pipefail
++          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
++            echo "Manual run: full validation and image build requested."
++            echo "image=true" >> "$GITHUB_OUTPUT"
++            exit 0
++          fi
++
++          if [[ "$EVENT_NAME" == "pull_request" ]]; then
++            RANGE="origin/${BASE_REF}...HEAD"
++          elif [[ "$EVENT_NAME" == "push" && -n "$BEFORE_SHA" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
++            RANGE="${BEFORE_SHA}..HEAD"
++          else
++            echo "No usable previous revision; running full validation."
++            echo "image=true" >> "$GITHUB_OUTPUT"
++            exit 0
++          fi
++
++          echo "Changed files:"
++          git diff --name-only "$RANGE" -- | tee changed-files.txt
++          IMAGE=false
++          while IFS= read -r FILE; do
++            [[ -z "$FILE" ]] && continue
++            case "$FILE" in
++              Dockerfile|requirements.txt|start-script.sh|.dockerignore|.env.example|.serve-template.json|\
++              .github/workflows/combined-image.yml|scripts/*|tests/*|Section_1_LangGraph/*|Section_2_MCP/*)
++                IMAGE=true
++                ;;
++            esac
++          done < changed-files.txt
++
++          if [[ "$IMAGE" == "true" ]]; then
++            echo "Image inputs changed: tests, builds, and smoke tests are required."
++          else
++            echo "Documentation/repository metadata only: skipping tests, Docker builds, and publication."
++          fi
++          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
++
+   build-test-publish:
++    name: Test, build, and publish
++    needs: changes
++    if: needs.changes.outputs.image == 'true'
+     runs-on: ubuntu-latest
+     timeout-minutes: 90
++    permissions:
++      contents: read
++      packages: write
+     steps:
+       - uses: actions/checkout@v4
+       - uses: actions/setup-python@v5
+@@ -29,9 +92,8 @@ jobs:
+       - name: Validate repository and MCP tests
+         run: |
+           python scripts/preflight.py --strict
+-          python -m unittest discover -s tests -v
+-          cd Section_2_MCP
+-          python -m unittest discover -s tests -v
++          python -m unittest discover -s tests -t . -v
++          python -m unittest discover -s Section_2_MCP/tests -t Section_2_MCP -v
+       - name: Enable ARM64 emulation for build and smoke tests
+         uses: docker/setup-qemu-action@v3
+         with:
+@@ -52,6 +114,8 @@ jobs:
+           IMAGE_REF="${{ steps.image.outputs.ref }}"
+           for ARCH in amd64 arm64; do
+             docker buildx build --platform "linux/${ARCH}" --load \
++              --cache-from "type=gha,scope=combined-workshop-${ARCH}" \
++              --cache-to "type=gha,mode=min,scope=combined-workshop-${ARCH}" \
+               -t "${IMAGE_REF}-${ARCH}" .
+           done
+       - name: Smoke-test both architectures
+diff --git a/README.md b/README.md
+index f4741ff..64018b8 100644
+--- a/README.md
++++ b/README.md
+@@ -102,6 +102,10 @@ The included `.github/workflows/combined-image.yml` workflow provides the comple
+ 3. Push or merge to `main`, or run **Combined workshop image** manually with **Run workflow**, to publish to GHCR.
+ 4. Open the workflow summary and copy the exact image reference.
+ 
++CI first checks which files changed. A commit limited to root documentation or repository metadata (for example `README.md`, `RUNBOOK.md`, `CITATION.cff`, or `docs/`) skips Python tests, Docker builds, smoke tests, and publication. Changes under either workshop directory—including notebooks and section-local README files—still require a new tested image because those files are copied into it. A mixed documentation/code change runs the full checks. **Run workflow** always forces the full validation and build path.
++
++Buildx reuses separate GitHub Actions caches for amd64 and arm64. This usually avoids reinstalling unchanged dependencies; it does not skip tests or smoke tests when image content changes.
++
+ Tags contain the UTC time, commit SHA, run number, and attempt. Each published tag is a multi-architecture manifest containing both variants, so Docker automatically selects arm64 on ARM hosts and amd64 on Intel/AMD hosts and Serve. The workflow never publishes `latest`, and it does not push an image until these checks pass:
+ 
+ - combined Serve preflight and MCP tests;
+@@ -159,9 +163,8 @@ Section 1 scientific packages and Session 2 MCP/Deep Agents packages are retaine
+ 
+ ```bash
+ python scripts/preflight.py --strict
+-python -m unittest discover -s tests -v
+-cd Section_2_MCP
+-python -m unittest discover -s tests -v
++python -m unittest discover -s tests -t . -v
++python -m unittest discover -s Section_2_MCP/tests -t Section_2_MCP -v
+ ```
+ 
+ See [Section 1 notes](Section_1_LangGraph/README.md), [Session 2 notes](Section_2_MCP/README.md), and the [combined runbook](RUNBOOK.md) for workshop-specific details.
+diff --git a/scripts/preflight.py b/scripts/preflight.py
+index 00ffc59..0daa19b 100644
+--- a/scripts/preflight.py
++++ b/scripts/preflight.py
+@@ -30,7 +30,8 @@ def main() -> int:
+         "Section_2_MCP/server.py", "Section_2_MCP/1-mcp-hands-on/mcp_literature_review_lab.ipynb",
+         "scripts/supervisord.conf", "scripts/start_jupyter_when_ready.sh",
+         "scripts/start_combined_docker.sh", "scripts/mcp_health.py", "scripts/workshop_healthcheck.py",
+-        ".github/workflows/combined-image.yml",
++        "tests/__init__.py", "tests/test_architecture_launcher.py", "tests/test_combined_setup.py",
++        "Section_2_MCP/tests/__init__.py", ".github/workflows/combined-image.yml",
+     ]
+     for rel in required:
+         require((root / rel).is_file(), f"Found {rel}", f"Missing {rel}")
+@@ -103,6 +104,20 @@ def main() -> int:
+         require(pin in requirements, f"Combined requirements include {pin}", f"Missing {pin}")
+ 
+     workflow = (root / ".github/workflows/combined-image.yml").read_text(encoding="utf-8")
++    require("git diff --name-only" in workflow and "needs: changes" in workflow
++            and "if: needs.changes.outputs.image == 'true'" in workflow,
++            "CI gates expensive work on changed image inputs", "Workflow must skip builds for non-image changes")
++    require("Dockerfile|requirements.txt|start-script.sh" in workflow
++            and ".github/workflows/combined-image.yml|scripts/*|tests/*" in workflow
++            and "Section_1_LangGraph/*|Section_2_MCP/*" in workflow,
++            "CI watches all combined-image inputs", "Workflow change detection must include every image input")
++    require("README.md" not in workflow and "RUNBOOK.md" not in workflow and "docs/*" not in workflow,
++            "Root documentation does not trigger image builds", "Do not classify root documentation as an image input")
++    require("python -m unittest discover -s Section_2_MCP/tests -t Section_2_MCP -v" in workflow,
++            "CI uses explicit importable MCP test paths", "Workflow must discover MCP tests from the repository root")
++    require('--cache-from "type=gha,scope=combined-workshop-${ARCH}"' in workflow
++            and '--cache-to "type=gha,mode=min,scope=combined-workshop-${ARCH}"' in workflow,
++            "CI caches each architecture separately", "Workflow must use separate amd64/arm64 Buildx caches")
+     require("for ARCH in amd64 arm64" in workflow and '--platform "linux/${ARCH}"' in workflow,
+             "CI builds linux/amd64 and linux/arm64", "Workflow must build both architectures")
+     require("setup-qemu-action" in workflow, "CI enables ARM64 smoke-test emulation", "Workflow must set up QEMU for ARM64")
+diff --git a/tests/__init__.py b/tests/__init__.py
+new file mode 100644
+index 0000000..2bb367f
+--- /dev/null
++++ b/tests/__init__.py
+@@ -0,0 +1 @@
++"""Repository-level tests for the combined workshop image."""

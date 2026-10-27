@@ -5,10 +5,11 @@ from pathlib import Path
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 REPO_DIR = PACKAGE_DIR.parent
-ENV_FILE = REPO_DIR / ".env"
+WORKSHOP_ROOT = REPO_DIR.parent
+ENV_FILE = WORKSHOP_ROOT / ".env"
 
-# Local notebooks and scripts load .env automatically. The server-only image does not
-# install python-dotenv, so import it only when a local .env file exists.
+# Both sections share only the combined root .env. Runtime environment variables
+# always take precedence, and no section-level .env file is loaded.
 if ENV_FILE.is_file():
     from dotenv import load_dotenv
 

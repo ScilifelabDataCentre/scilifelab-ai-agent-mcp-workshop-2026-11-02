@@ -9,7 +9,7 @@ Edit the cells here, not in the .ipynb files. Cells built with gap() differ betw
 import json
 from pathlib import Path
 
-OUT_DIR = Path(__file__).resolve().parent.parent / "1-mcp-hands-on"
+OUT_DIR = Path(__file__).resolve().parents[1] / "Section_2_MCP" / "1-mcp-hands-on"
 LAB = OUT_DIR / "mcp_literature_review_lab.ipynb"
 SOLUTION = OUT_DIR / "mcp_literature_review_solution.ipynb"
 

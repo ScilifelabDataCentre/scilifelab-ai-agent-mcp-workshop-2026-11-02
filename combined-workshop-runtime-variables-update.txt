@@ -1,0 +1,221 @@
+diff --git a/.env.example b/.env.example
+index 4e0974d..bb7bcd5 100644
+--- a/.env.example
++++ b/.env.example
+@@ -1,5 +1,6 @@
+ # Optional local runtime settings. Never commit the copied .env file.
+ # Pass it with: docker run --env-file .env ...
++# Or override each value independently with docker run -e NAME=value ...
+ OPENLLM_API_KEY=
+ OPENLLM_BASE_URL=https://openllm.scilifelab.se/api
+ OPENLLM_MODEL=qwen3
+diff --git a/.github/workflows/combined-image.yml b/.github/workflows/combined-image.yml
+index 4df1174..fa32a17 100644
+--- a/.github/workflows/combined-image.yml
++++ b/.github/workflows/combined-image.yml
+@@ -172,13 +172,18 @@ jobs:
+         run: |
+           set -euo pipefail
+           IMAGE_REF="${{ steps.image.outputs.ref }}"
++          IMAGE_NAME="${IMAGE_REF%:*}"
+           docker push "${IMAGE_REF}-amd64"
+           docker push "${IMAGE_REF}-arm64"
+-          docker buildx imagetools create -t "${IMAGE_REF}" \
++          docker buildx imagetools create \
++            -t "${IMAGE_REF}" \
++            -t "${IMAGE_NAME}:latest" \
+             "${IMAGE_REF}-amd64" "${IMAGE_REF}-arm64"
+-          docker buildx imagetools inspect "${IMAGE_REF}" | tee /tmp/combined-manifest.txt
+-          grep -q 'linux/amd64' /tmp/combined-manifest.txt
+-          grep -q 'linux/arm64' /tmp/combined-manifest.txt
++          for MANIFEST_REF in "${IMAGE_REF}" "${IMAGE_NAME}:latest"; do
++            docker buildx imagetools inspect "${MANIFEST_REF}" | tee /tmp/combined-manifest.txt
++            grep -q 'linux/amd64' /tmp/combined-manifest.txt
++            grep -q 'linux/arm64' /tmp/combined-manifest.txt
++          done
+       - name: Serve deployment note
+         if: github.event_name != 'pull_request'
+         shell: bash
+diff --git a/Dockerfile b/Dockerfile
+index 7003c5e..e931c6a 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -12,7 +12,13 @@ ENV DEBIAN_FRONTEND=noninteractive \
+     MCP_HOST=0.0.0.0 \
+     MCP_PORT=8000 \
+     MCP_URL=http://127.0.0.1:8000/mcp \
+-    JUPYTER_PORT=7860
++    JUPYTER_PORT=7860 \
++    OPENLLM_BASE_URL=https://openllm.scilifelab.se/api \
++    OPENLLM_MODEL=qwen3 \
++    OPENLLM_DISABLE_THINKING=1
++
++# Override these defaults with individual docker run -e options.
++# OPENLLM_API_KEY deliberately has no image default; provide it only at runtime.
+ 
+ # Keep Section 1's native/runtime libraries and add Supervisor for MCP recovery.
+ RUN apt-get update && apt-get install -y --no-install-recommends \
+diff --git a/Section_1_LangGraph/langgraph_answer.ipynb b/Section_1_LangGraph/langgraph_answer.ipynb
+index 8449e9a..4802c39 100644
+--- a/Section_1_LangGraph/langgraph_answer.ipynb
++++ b/Section_1_LangGraph/langgraph_answer.ipynb
+@@ -103,7 +103,7 @@
+     "from langchain.tools import tool\n",
+     "\n",
+     "# Load the environment variables\n",
+-    "load_dotenv(override=True)"
++    "load_dotenv()  # Runtime environment variables take precedence over .env"
+    ]
+   },
+   {
+@@ -113,7 +113,7 @@
+    "source": [
+     "### Exercise 1.2: Configure the LLM\n",
+     "\n",
+-    "In this workshop we use the **SciLifeLab openLLM service** by default (model `Qwen/Qwen3.8-27B`).\n",
++    "In this workshop we use the **SciLifeLab openLLM service**. Override its model or endpoint with the `OPENLLM_MODEL` and `OPENLLM_BASE_URL` environment variables.\n",
+     "\n",
+     "The function `get_llm()` below helps you call the LLM that will be used for agent later. It will tries the pilot service first; if it cannot be reached during the session (or no `PILOT_API_KEY` is set), it automatically falls back to OpenAI. "
+    ]
+@@ -129,8 +129,8 @@
+     "from langchain_openai import ChatOpenAI\n",
+     "\n",
+     "# LLM configuration: SciLifeLab Open LLM service\n",
+-    "OPENLLM_BASE_URL = \"https://openllm.scilifelab.se/api\"\n",
+-    "OPENLLM_MODEL = \"Qwen/Qwen3.8-27B\"  # or gemma-27b, Qwen3-235B-A22B\n",
++    "OPENLLM_BASE_URL = os.getenv(\"OPENLLM_BASE_URL\", \"https://openllm.scilifelab.se/api\")\n",
++    "OPENLLM_MODEL = os.getenv(\"OPENLLM_MODEL\", \"Qwen/Qwen3.8-27B\")  # or gemma-27b, Qwen3-235B-A22B\n",
+     "\n",
+     "def get_llm(model= OPENLLM_MODEL, base_url = OPENLLM_BASE_URL, temperature: float = 0, **kwargs):\n",
+     "    \"\"\"Return a chat model, preferring the SciLifeLab pilot service.\n",
+diff --git a/Section_1_LangGraph/langgraph_lab.ipynb b/Section_1_LangGraph/langgraph_lab.ipynb
+index 4404bf7..881193b 100644
+--- a/Section_1_LangGraph/langgraph_lab.ipynb
++++ b/Section_1_LangGraph/langgraph_lab.ipynb
+@@ -102,7 +102,7 @@
+     "from langchain.tools import tool\n",
+     "\n",
+     "# Load the environment variables\n",
+-    "load_dotenv(override=True)"
++    "load_dotenv()  # Runtime environment variables take precedence over .env"
+    ]
+   },
+   {
+@@ -112,7 +112,7 @@
+    "source": [
+     "### Exercise 1.2: Configure the LLM\n",
+     "\n",
+-    "In this workshop we use the **SciLifeLab openLLM service** by default (model `Qwen/Qwen3.8-27B`).\n",
++    "In this workshop we use the **SciLifeLab openLLM service**. Override its model or endpoint with the `OPENLLM_MODEL` and `OPENLLM_BASE_URL` environment variables.\n",
+     "\n",
+     "The function `get_llm()` below helps you call the LLM that will be used for agent later. It will tries the pilot service first; if it cannot be reached during the session (or no `PILOT_API_KEY` is set), it automatically falls back to OpenAI. "
+    ]
+@@ -128,8 +128,8 @@
+     "from langchain_openai import ChatOpenAI\n",
+     "\n",
+     "# LLM configuration: SciLifeLab Open LLM service\n",
+-    "OPENLLM_BASE_URL = \"https://openllm.scilifelab.se/api\"\n",
+-    "OPENLLM_MODEL = \"Qwen/Qwen3.8-27B\"  # or gemma-27b, Qwen3-235B-A22B\n",
++    "OPENLLM_BASE_URL = os.getenv(\"OPENLLM_BASE_URL\", \"https://openllm.scilifelab.se/api\")\n",
++    "OPENLLM_MODEL = os.getenv(\"OPENLLM_MODEL\", \"Qwen/Qwen3.8-27B\")  # or gemma-27b, Qwen3-235B-A22B\n",
+     "\n",
+     "def get_llm(model= OPENLLM_MODEL, base_url = OPENLLM_BASE_URL, temperature: float = 0, **kwargs):\n",
+     "    \"\"\"Return a chat model, preferring the SciLifeLab pilot service.\n",
+diff --git a/scripts/preflight.py b/scripts/preflight.py
+index 0daa19b..0fad525 100644
+--- a/scripts/preflight.py
++++ b/scripts/preflight.py
+@@ -67,9 +67,24 @@ def main() -> int:
+     require('ENTRYPOINT ["./start-script.sh"]' in dockerfile, "Startup-script entrypoint", "Dockerfile must use start-script.sh")
+     require('CMD ["python", "scripts/workshop_healthcheck.py"]' in dockerfile,
+             "Combined Docker health check", "Dockerfile must run the combined health check")
++    require("OPENLLM_BASE_URL=https://openllm.scilifelab.se/api" in dockerfile
++            and "OPENLLM_MODEL=qwen3" in dockerfile,
++            "OpenLLM endpoint and model have runtime-overridable defaults",
++            "Dockerfile must provide overridable OpenLLM endpoint/model defaults")
++    require("OPENLLM_API_KEY=" not in dockerfile
++            and "ENV OPENLLM_API_KEY" not in dockerfile and "ARG OPENLLM_API_KEY" not in dockerfile,
++            "OpenLLM API key has no image default", "Never bake an OpenLLM API key into the image")
+     require(".env" not in re.sub(r"OPENLLM_API_KEY|MCP_URL|LITREVIEW_MODE", "", dockerfile),
+             "Dockerfile does not create a .env file", "Do not create or copy .env in the image")
+ 
++    for notebook_rel in ("Section_1_LangGraph/langgraph_lab.ipynb", "Section_1_LangGraph/langgraph_answer.ipynb"):
++        notebook = json.loads((root / notebook_rel).read_text(encoding="utf-8"))
++        source = "\n".join("".join(cell.get("source", [])) for cell in notebook.get("cells", []))
++        require('os.getenv("OPENLLM_BASE_URL"' in source and 'os.getenv("OPENLLM_MODEL"' in source
++                and "load_dotenv()" in source and "override=True" not in source,
++                f"{notebook_rel} honors individual runtime variables",
++                f"{notebook_rel} must honor runtime OpenLLM variables over .env")
++
+     start = (root / "start-script.sh").read_text(encoding="utf-8")
+     require(start.lstrip().startswith("#!"), "Root startup has a shebang", "Startup script needs a shebang")
+     require("exec supervisord -c scripts/supervisord.conf" in start,
+@@ -132,7 +147,10 @@ def main() -> int:
+     require("id -u" in workflow and "1000" in workflow, "CI verifies runtime UID", "Workflow must verify UID 1000")
+     require("packages: write" in workflow and "GITHUB_TOKEN" in workflow, "CI can publish to GHCR", "Workflow needs GHCR permissions and token")
+     require("GITHUB_SHA" in workflow and "date -u" in workflow, "CI creates unique tags", "Workflow needs timestamp/SHA tags")
+-    require(not re.search(r"(?i)(?:-t|--tag)\s+[^\s]+:latest\b", workflow), "CI does not publish latest", "Do not publish latest")
++    require('IMAGE_NAME="${IMAGE_REF%:*}"' in workflow
++            and '-t "${IMAGE_REF}"' in workflow and '-t "${IMAGE_NAME}:latest"' in workflow,
++            "CI publishes local latest alongside the unique manifest",
++            "Workflow must publish latest and retain the unique Serve/deployment tag")
+ 
+     forbidden = [p for p in root.rglob("*") if p.is_file() and p.name == ".env"]
+     require(not forbidden, "No .env file is packaged", "Do not package .env")
+diff --git a/tests/test_combined_setup.py b/tests/test_combined_setup.py
+index 7cc43dd..d2aba07 100644
+--- a/tests/test_combined_setup.py
++++ b/tests/test_combined_setup.py
+@@ -1,5 +1,6 @@
+ from __future__ import annotations
+ 
++import json
+ import os
+ from pathlib import Path
+ import secrets
+@@ -64,6 +65,45 @@ class CombinedSetupTests(unittest.TestCase):
+         self.assertNotIn(token, result.stdout)
+         self.assertNotIn(token, result.stderr)
+ 
++    def test_individual_openllm_variables_reach_container_processes(self) -> None:
++        with tempfile.TemporaryDirectory() as tmp:
++            bin_dir = Path(tmp) / "bin"
++            bin_dir.mkdir()
++            capture_file = Path(tmp) / "environment.json"
++            fake_supervisord = bin_dir / "supervisord"
++            fake_supervisord.write_text(
++                "#!/usr/bin/env python3\n"
++                "import json, os\n"
++                "with open(os.environ['ENV_CAPTURE_FILE'], 'w', encoding='utf-8') as handle:\n"
++                "    json.dump({\n"
++                "        'api_key_present': bool(os.environ.get('OPENLLM_API_KEY')),\n"
++                "        'base_url': os.environ.get('OPENLLM_BASE_URL'),\n"
++                "        'model': os.environ.get('OPENLLM_MODEL'),\n"
++                "    }, handle)\n",
++                encoding="utf-8",
++            )
++            fake_supervisord.chmod(0o755)
++            env = os.environ.copy()
++            env.update({
++                "PATH": f"{bin_dir}:{env['PATH']}",
++                "ENV_CAPTURE_FILE": str(capture_file),
++                "OPENLLM_API_KEY": "dummy-test-credential",
++                "OPENLLM_BASE_URL": "https://example.invalid/api",
++                "OPENLLM_MODEL": "test-model",
++            })
++            result = subprocess.run(
++                ["bash", "start-script.sh"], cwd=ROOT, env=env,
++                capture_output=True, text=True, timeout=15,
++            )
++            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
++            captured = json.loads(capture_file.read_text(encoding="utf-8"))
++            self.assertEqual(captured, {
++                "api_key_present": True,
++                "base_url": "https://example.invalid/api",
++                "model": "test-model",
++            })
++            self.assertNotIn("dummy-test-credential", result.stdout + result.stderr)
++
+     def test_local_mode_is_the_only_token_free_mode(self) -> None:
+         result, args = self.run_startup({"WORKSHOP_LOCAL_NO_AUTH": "1"})
+         self.assertIn("Local loopback mode", result.stdout)

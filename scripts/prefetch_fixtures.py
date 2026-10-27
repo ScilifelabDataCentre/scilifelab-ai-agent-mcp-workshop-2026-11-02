@@ -12,7 +12,8 @@ import argparse
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+MCP_ROOT = Path(__file__).resolve().parents[1] / "Section_2_MCP"
+sys.path.insert(0, str(MCP_ROOT))
 
 from litreview import config, europepmc  # noqa: E402
 

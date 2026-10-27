@@ -1,7 +1,7 @@
 """Contract tests for the MCP server, in memory, against synthetic cached responses.
 
 Needs the workshop environment (mcp v2). Skipped automatically where the SDK is missing.
-Run from the session folder:  python -m unittest tests.test_server_contract
+Run from the repository root: python -m unittest tests.section_2_mcp.test_server_contract
 """
 
 import asyncio
@@ -21,7 +21,7 @@ try:
 except ImportError:  # outside the workshop environment
     HAVE_SDK = False
 
-from tests.fakes import SEARCH_PAYLOAD
+from tests.section_2_mcp.fakes import SEARCH_PAYLOAD
 
 
 @unittest.skipUnless(HAVE_SDK, "needs the workshop environment (mcp v2)")

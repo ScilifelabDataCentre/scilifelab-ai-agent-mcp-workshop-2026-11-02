@@ -30,11 +30,17 @@ def main() -> int:
         "Section_2_MCP/server.py", "Section_2_MCP/1-mcp-hands-on/mcp_literature_review_lab.ipynb",
         "scripts/supervisord.conf", "scripts/start_jupyter_when_ready.sh",
         "scripts/start_combined_docker.sh", "scripts/mcp_health.py", "scripts/workshop_healthcheck.py",
+        "scripts/build_notebooks.py", "scripts/prefetch_fixtures.py",
         "tests/__init__.py", "tests/test_architecture_launcher.py", "tests/test_combined_setup.py",
-        "Section_2_MCP/tests/__init__.py", ".github/workflows/combined-image.yml",
+        "tests/section_2_mcp/__init__.py", "tests/section_2_mcp/test_root_environment.py",
+        ".github/workflows/combined-image.yml",
     ]
     for rel in required:
         require((root / rel).is_file(), f"Found {rel}", f"Missing {rel}")
+
+    for rel in ("Section_2_MCP/Dockerfile", "Section_2_MCP/scripts",
+                "Section_2_MCP/tests", "Section_2_MCP/.github"):
+        require(not (root / rel).exists(), f"No standalone {rel}", f"Remove standalone infrastructure: {rel}")
 
     metadata = json.loads((root / ".serve-template.json").read_text(encoding="utf-8"))
     require(metadata.get("app_type") == "custom", "Custom app metadata", "app_type must be custom")
@@ -81,9 +87,16 @@ def main() -> int:
         notebook = json.loads((root / notebook_rel).read_text(encoding="utf-8"))
         source = "\n".join("".join(cell.get("source", [])) for cell in notebook.get("cells", []))
         require('os.getenv("OPENLLM_BASE_URL"' in source and 'os.getenv("OPENLLM_MODEL"' in source
-                and "load_dotenv()" in source and "override=True" not in source,
-                f"{notebook_rel} honors individual runtime variables",
-                f"{notebook_rel} must honor runtime OpenLLM variables over .env")
+                and 'load_dotenv(Path.cwd().parent / ".env")' in source and "override=True" not in source,
+                f"{notebook_rel} uses the root .env and honors runtime variables",
+                f"{notebook_rel} must load only the root .env without overriding runtime variables")
+
+    mcp_config = (root / "Section_2_MCP/litreview/config.py").read_text(encoding="utf-8")
+    require("WORKSHOP_ROOT = REPO_DIR.parent" in mcp_config
+            and 'ENV_FILE = WORKSHOP_ROOT / ".env"' in mcp_config
+            and 'ENV_FILE = REPO_DIR / ".env"' not in mcp_config,
+            "Section 2 loads only the combined root .env",
+            "Section 2 must load the root .env, not a section-level file")
 
     start = (root / "start-script.sh").read_text(encoding="utf-8")
     require(start.lstrip().startswith("#!"), "Root startup has a shebang", "Startup script needs a shebang")
@@ -128,8 +141,9 @@ def main() -> int:
             "CI watches all combined-image inputs", "Workflow change detection must include every image input")
     require("README.md" not in workflow and "RUNBOOK.md" not in workflow and "docs/*" not in workflow,
             "Root documentation does not trigger image builds", "Do not classify root documentation as an image input")
-    require("python -m unittest discover -s Section_2_MCP/tests -t Section_2_MCP -v" in workflow,
-            "CI uses explicit importable MCP test paths", "Workflow must discover MCP tests from the repository root")
+    require("python -m unittest discover -s tests -t . -v" in workflow
+            and "unittest discover -s Section_2_MCP/tests" not in workflow,
+            "CI runs one root-level test suite", "Workflow must run only the combined root test discovery")
     require('--cache-from "type=gha,scope=combined-workshop-${ARCH}"' in workflow
             and '--cache-to "type=gha,mode=min,scope=combined-workshop-${ARCH}"' in workflow,
             "CI caches each architecture separately", "Workflow must use separate amd64/arm64 Buildx caches")
@@ -140,10 +154,19 @@ def main() -> int:
             "CI smoke-tests both architectures", "Workflow must smoke-test amd64 and arm64")
     require("uname -m" in workflow and "EXPECTED_MACHINE" in workflow,
             "CI verifies each runtime architecture", "Workflow must verify amd64 and arm64 execution")
-    require("imagetools create" in workflow and '"${IMAGE_REF}-arm64"' in workflow,
-            "CI publishes one multi-architecture manifest", "Workflow must publish an amd64/arm64 manifest")
+    require("--platform linux/amd64,linux/arm64" in workflow and "--push ." in workflow,
+            "CI publishes one multi-architecture manifest", "Workflow must use one final multi-architecture Buildx push")
+    require("imagetools create" not in workflow
+            and 'docker push "${IMAGE_REF}-amd64"' not in workflow
+            and 'docker push "${IMAGE_REF}-arm64"' not in workflow,
+            "CI does not publish architecture-specific tags", "Remove permanent amd64/arm64 registry tags")
+    require("--provenance=false" in workflow and "--sbom=false" in workflow,
+            "CI does not publish extra attestation manifests", "Disable provenance and SBOM attestations for the workshop image")
     require("scripts/preflight.py --strict" in workflow, "CI runs Serve preflight", "Workflow must run preflight")
     require("scripts/workshop_healthcheck.py" in workflow, "CI smoke-tests MCP and Jupyter", "Workflow must run combined health check")
+    require("assert not any" in workflow and "Section_2_MCP/.github" in workflow,
+            "CI verifies removed Section 2 infrastructure is absent from images",
+            "Smoke tests must reject standalone Section 2 infrastructure in the image")
     require("id -u" in workflow and "1000" in workflow, "CI verifies runtime UID", "Workflow must verify UID 1000")
     require("packages: write" in workflow and "GITHUB_TOKEN" in workflow, "CI can publish to GHCR", "Workflow needs GHCR permissions and token")
     require("GITHUB_SHA" in workflow and "date -u" in workflow, "CI creates unique tags", "Workflow needs timestamp/SHA tags")
