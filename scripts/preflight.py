@@ -67,8 +67,23 @@ def main() -> int:
     require('ENTRYPOINT ["./start-script.sh"]' in dockerfile, "Startup-script entrypoint", "Dockerfile must use start-script.sh")
     require('CMD ["python", "scripts/workshop_healthcheck.py"]' in dockerfile,
             "Combined Docker health check", "Dockerfile must run the combined health check")
+    require("OPENLLM_BASE_URL=https://openllm.scilifelab.se/api" in dockerfile
+            and "OPENLLM_MODEL=qwen3" in dockerfile,
+            "OpenLLM endpoint and model have runtime-overridable defaults",
+            "Dockerfile must provide overridable OpenLLM endpoint/model defaults")
+    require("OPENLLM_API_KEY=" not in dockerfile
+            and "ENV OPENLLM_API_KEY" not in dockerfile and "ARG OPENLLM_API_KEY" not in dockerfile,
+            "OpenLLM API key has no image default", "Never bake an OpenLLM API key into the image")
     require(".env" not in re.sub(r"OPENLLM_API_KEY|MCP_URL|LITREVIEW_MODE", "", dockerfile),
             "Dockerfile does not create a .env file", "Do not create or copy .env in the image")
+
+    for notebook_rel in ("Section_1_LangGraph/langgraph_lab.ipynb", "Section_1_LangGraph/langgraph_answer.ipynb"):
+        notebook = json.loads((root / notebook_rel).read_text(encoding="utf-8"))
+        source = "\n".join("".join(cell.get("source", [])) for cell in notebook.get("cells", []))
+        require('os.getenv("OPENLLM_BASE_URL"' in source and 'os.getenv("OPENLLM_MODEL"' in source
+                and "load_dotenv()" in source and "override=True" not in source,
+                f"{notebook_rel} honors individual runtime variables",
+                f"{notebook_rel} must honor runtime OpenLLM variables over .env")
 
     start = (root / "start-script.sh").read_text(encoding="utf-8")
     require(start.lstrip().startswith("#!"), "Root startup has a shebang", "Startup script needs a shebang")
@@ -132,7 +147,10 @@ def main() -> int:
     require("id -u" in workflow and "1000" in workflow, "CI verifies runtime UID", "Workflow must verify UID 1000")
     require("packages: write" in workflow and "GITHUB_TOKEN" in workflow, "CI can publish to GHCR", "Workflow needs GHCR permissions and token")
     require("GITHUB_SHA" in workflow and "date -u" in workflow, "CI creates unique tags", "Workflow needs timestamp/SHA tags")
-    require(not re.search(r"(?i)(?:-t|--tag)\s+[^\s]+:latest\b", workflow), "CI does not publish latest", "Do not publish latest")
+    require('IMAGE_NAME="${IMAGE_REF%:*}"' in workflow
+            and '-t "${IMAGE_REF}"' in workflow and '-t "${IMAGE_NAME}:latest"' in workflow,
+            "CI publishes local latest alongside the unique manifest",
+            "Workflow must publish latest and retain the unique Serve/deployment tag")
 
     forbidden = [p for p in root.rglob("*") if p.is_file() and p.name == ".env"]
     require(not forbidden, "No .env file is packaged", "Do not package .env")

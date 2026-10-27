@@ -172,13 +172,18 @@ jobs:
         run: |
           set -euo pipefail
           IMAGE_REF="${{ steps.image.outputs.ref }}"
+          IMAGE_NAME="${IMAGE_REF%:*}"
           docker push "${IMAGE_REF}-amd64"
           docker push "${IMAGE_REF}-arm64"
-          docker buildx imagetools create -t "${IMAGE_REF}" \
+          docker buildx imagetools create \
+            -t "${IMAGE_REF}" \
+            -t "${IMAGE_NAME}:latest" \
             "${IMAGE_REF}-amd64" "${IMAGE_REF}-arm64"
-          docker buildx imagetools inspect "${IMAGE_REF}" | tee /tmp/combined-manifest.txt
-          grep -q 'linux/amd64' /tmp/combined-manifest.txt
-          grep -q 'linux/arm64' /tmp/combined-manifest.txt
+          for MANIFEST_REF in "${IMAGE_REF}" "${IMAGE_NAME}:latest"; do
+            docker buildx imagetools inspect "${MANIFEST_REF}" | tee /tmp/combined-manifest.txt
+            grep -q 'linux/amd64' /tmp/combined-manifest.txt
+            grep -q 'linux/arm64' /tmp/combined-manifest.txt
+          done
       - name: Serve deployment note
         if: github.event_name != 'pull_request'
         shell: bash

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 import secrets
@@ -63,6 +64,45 @@ class CombinedSetupTests(unittest.TestCase):
         self.assertIn(f"--ServerApp.token={token}", args)
         self.assertNotIn(token, result.stdout)
         self.assertNotIn(token, result.stderr)
+
+    def test_individual_openllm_variables_reach_container_processes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            bin_dir = Path(tmp) / "bin"
+            bin_dir.mkdir()
+            capture_file = Path(tmp) / "environment.json"
+            fake_supervisord = bin_dir / "supervisord"
+            fake_supervisord.write_text(
+                "#!/usr/bin/env python3\n"
+                "import json, os\n"
+                "with open(os.environ['ENV_CAPTURE_FILE'], 'w', encoding='utf-8') as handle:\n"
+                "    json.dump({\n"
+                "        'api_key_present': bool(os.environ.get('OPENLLM_API_KEY')),\n"
+                "        'base_url': os.environ.get('OPENLLM_BASE_URL'),\n"
+                "        'model': os.environ.get('OPENLLM_MODEL'),\n"
+                "    }, handle)\n",
+                encoding="utf-8",
+            )
+            fake_supervisord.chmod(0o755)
+            env = os.environ.copy()
+            env.update({
+                "PATH": f"{bin_dir}:{env['PATH']}",
+                "ENV_CAPTURE_FILE": str(capture_file),
+                "OPENLLM_API_KEY": "dummy-test-credential",
+                "OPENLLM_BASE_URL": "https://example.invalid/api",
+                "OPENLLM_MODEL": "test-model",
+            })
+            result = subprocess.run(
+                ["bash", "start-script.sh"], cwd=ROOT, env=env,
+                capture_output=True, text=True, timeout=15,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            captured = json.loads(capture_file.read_text(encoding="utf-8"))
+            self.assertEqual(captured, {
+                "api_key_present": True,
+                "base_url": "https://example.invalid/api",
+                "model": "test-model",
+            })
+            self.assertNotIn("dummy-test-credential", result.stdout + result.stderr)
 
     def test_local_mode_is_the_only_token_free_mode(self) -> None:
         result, args = self.run_startup({"WORKSHOP_LOCAL_NO_AUTH": "1"})

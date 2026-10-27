@@ -12,7 +12,13 @@ ENV DEBIAN_FRONTEND=noninteractive \
     MCP_HOST=0.0.0.0 \
     MCP_PORT=8000 \
     MCP_URL=http://127.0.0.1:8000/mcp \
-    JUPYTER_PORT=7860
+    JUPYTER_PORT=7860 \
+    OPENLLM_BASE_URL=https://openllm.scilifelab.se/api \
+    OPENLLM_MODEL=qwen3 \
+    OPENLLM_DISABLE_THINKING=1
+
+# Override these defaults with individual docker run -e options.
+# OPENLLM_API_KEY deliberately has no image default; provide it only at runtime.
 
 # Keep Section 1's native/runtime libraries and add Supervisor for MCP recovery.
 RUN apt-get update && apt-get install -y --no-install-recommends \
