@@ -185,8 +185,24 @@ docker run -d \
   -v "$PWD/work:/home/workshop/app/work" \
   ghcr.io/scilifelabdatacentre/scilifelab-ai-agent-mcp-workshop-2026-11-02:latest
 ```
+**Use the command to get the link**:
+```bash
+docker port ai-agents-workshop 7860/tcp
+```
+The first command returns the link such as `127.0.0.1:xxxxx`. Open it in your browser. It will ask you to provide a token.
 
-Then open **http://localhost:7860** in your browser.
+**Use the command to get the token**:
+```bash
+docker exec ai-agents-workshop jupyter server list
+```
+This will return the server link. For example,
+```bash
+Currently running servers:
+http://72aaf9d19f20:7860/?token=e56dd14b0ecb51c581b8b643430785c6d8286e495148c617 :: /home/workshop/app
+```
+Use only the token value (for example, in this case `e56dd14b0ecb51c581b8b643430785c6d8286e495148c617`) in that link (for example, `127.0.0.1:xxxxx`).
+
+**Remember: Your link and token value will be different from these examples**.
 
 ---
 
