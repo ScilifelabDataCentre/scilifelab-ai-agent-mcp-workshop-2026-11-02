@@ -68,7 +68,7 @@ def main() -> int:
     require('CMD ["python", "scripts/workshop_healthcheck.py"]' in dockerfile,
             "Combined Docker health check", "Dockerfile must run the combined health check")
     require("OPENLLM_BASE_URL=https://openllm.scilifelab.se/api" in dockerfile
-            and "OPENLLM_MODEL=qwen3" in dockerfile,
+            and "OPENLLM_MODEL=Qwen3-235B-A22B" in dockerfile,
             "OpenLLM endpoint and model have runtime-overridable defaults",
             "Dockerfile must provide overridable OpenLLM endpoint/model defaults")
     require("OPENLLM_API_KEY=" not in dockerfile
