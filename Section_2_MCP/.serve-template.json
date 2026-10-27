@@ -1,0 +1,11 @@
+{
+  "template_reference": "https://github.com/ScilifelabDataCentre/serve-app-template",
+  "template_version": "0.1.0",
+  "app_type": "custom",
+  "app_port": 7860,
+  "serve_uid": 1000,
+  "entrypoint": "start-script.sh",
+  "health_path": "/login",
+  "mcp_internal_port": 8000,
+  "serve_doc_url": "https://serve.scilifelab.se/docs/application-hosting/other/"
+}
