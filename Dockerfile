@@ -14,7 +14,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     MCP_URL=http://127.0.0.1:8000/mcp \
     JUPYTER_PORT=7860 \
     OPENLLM_BASE_URL=https://openllm.scilifelab.se/api \
-    OPENLLM_MODEL=qwen3 \
+    OPENLLM_MODEL=Qwen3-235B-A22B \
     OPENLLM_DISABLE_THINKING=1
 
 # Override these defaults with individual docker run -e options.
