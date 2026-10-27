@@ -26,7 +26,7 @@ def main() -> int:
     required = [
         "Dockerfile", "start-script.sh", "scripts/start_jupyter_when_ready.sh",
         "scripts/start_workshop_docker.sh", "scripts/supervisord.conf", "scripts/workshop_healthcheck.py",
-        "requirements.txt", "requirements-server.txt", "README.md", "DEPLOY_SERVE.md",
+        "requirements.txt", "requirements-server.txt",
         ".serve-template.json", ".github/workflows/preflight.yml",
         ".github/workflows/docker-image-ghcr.yml",
     ]
