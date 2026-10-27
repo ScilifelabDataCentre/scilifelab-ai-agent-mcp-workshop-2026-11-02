@@ -6,7 +6,7 @@
 
 <div align="center">
 <a href="[https://www.lyyti.in/developing_ai_agents](https://www.scilifelab.se/event/ai-agents-in-life-science-gothenburg/)">
-<img src="session-2-mcp/1-mcp-from-scratch/images/cover_image.png" width="800" alt="Workshop Title Image">
+<img src="assets/cover.png" width="800" alt="Workshop Title Image">
 </a>
 </div>
 
