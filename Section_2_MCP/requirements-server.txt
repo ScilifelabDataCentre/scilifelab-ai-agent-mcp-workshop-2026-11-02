@@ -1,2 +1,0 @@
-# Server-only image (SciLifeLab Serve). The server needs nothing beyond the MCP SDK.
-mcp==2.3.0
