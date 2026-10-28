@@ -17,44 +17,7 @@ By the end of this workshop, participants will:
 - Build a ReAct-style agent from scratch using LLMs and custom tools
 - Implement agent memory to maintain conversational context
 - Compare custom agents with prebuilt LangGraph agents
-- Explore advanced agentic architectures, including  CodeAct agent and Multi-agent.
-
-## Repository Structure
-
-```
-workshop/
-├── README.md               # This comprehensive guide
-├── requirements.txt        # Python dependencies
-├── langgraph_lab.ipynb     # Main workshop notebook (exercises)
-├── langgraph_answer.ipynb  # Solution notebook with completed code
-├── .env                    # environment files (contain your API keys)
-├── images/                 # Workshop assets
-├── utils/                  # Several useful functions/resources for the exercises
-```
-
-## Getting Started
-
-**Change directory to Section 1**
-
-```bash
-cd Section_1_LangGraph
-```
-
-**Build Docker Image**
-
-```bash
-docker build -t scilifelab-langgraph-jupyter:v1 .
-```
-
-**Run Docker container**
-
-```bash
-docker run -p 8888:8888 \
-  -e OPENLLM_API_KEY="sk-..." \
-  scilifelab-langgraph-jupyter:v1
-```
-
-Go to **http://localhost:8888** on your browser and starting the lab
+- Explore advanced agentic architectures, including CodeAct agent and Multi-agent.
 
 ## Detailed Notebook Content
 
