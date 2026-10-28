@@ -94,7 +94,7 @@ The workshop will feature a series of engaging presentations, interactive discus
 | Session | Directory | Focus |
 |---|---|---|
 | **Session 1** | `Section_1_LangGraph/` | Build drug discovery AI agents using LangGraph and the ReAct pattern |
-| **Session 2** | `Section_1_MCP/` | Expose those tools over MCP and connect agents across servers |
+| **Session 2** | `Section_2_MCP/` | Expose those tools over MCP and connect agents across servers |
 
 Each session directory contains its own detailed `README.md` with full instructions, notebook guidance, and troubleshooting.
 
