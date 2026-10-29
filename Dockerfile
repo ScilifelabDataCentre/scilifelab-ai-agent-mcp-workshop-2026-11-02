@@ -1,5 +1,4 @@
 # Combined workshop image: one JupyterLab, two workshop directories, internal MCP.
-# Build from the repository root for linux/amd64 or linux/arm64, not from a workshop subdirectory.
 FROM python:3.12-slim
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -46,6 +45,8 @@ COPY --chown=1000:1000 Section_1_LangGraph ./Section_1_LangGraph
 COPY --chown=1000:1000 Section_2_MCP ./Section_2_MCP
 COPY --chown=1000:1000 scripts ./scripts
 COPY --chown=1000:1000 start-script.sh ./start-script.sh
+COPY --chown=1000:1000 assets ./assets
+COPY --chown=1000:1000 README.md ./README.md
 
 
 RUN chmod +x ./start-script.sh ./scripts/*.sh \
