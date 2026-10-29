@@ -2,6 +2,14 @@
 
 A hands-on workshop on building and using a Model Context Protocol (MCP) server for scientific literature review.
 
+<div align="center">
+<a href="[https://www.lyyti.in/developing_ai_agents](https://www.scilifelab.se/event/ai-agents-in-life-science-lund/)">
+<img src="../assets/mcp-overview.png" width="800" alt="MCP Overview">
+<img src="../assets/mcp-workshop-overview.png" width="800" alt="MCP Workshop Overview">
+</a>
+</a>
+</div>
+
 The example uses **Europe PMC** for literature searches and **SciLifeLab OpenLLM** for model access.
 
 ## What you'll learn

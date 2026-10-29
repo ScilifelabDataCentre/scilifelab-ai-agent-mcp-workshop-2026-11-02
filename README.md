@@ -5,7 +5,7 @@
 ---
 
 <div align="center">
-<a href="[https://www.lyyti.in/developing_ai_agents](https://www.scilifelab.se/event/ai-agents-in-life-science-gothenburg/)">
+<a href="[https://www.lyyti.in/developing_ai_agents](https://www.scilifelab.se/event/ai-agents-in-life-science-lund/)">
 <img src="assets/cover.png" width="800" alt="Workshop Title Image">
 </a>
 </div>
