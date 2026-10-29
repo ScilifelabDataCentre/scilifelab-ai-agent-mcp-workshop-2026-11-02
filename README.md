@@ -96,7 +96,7 @@ The workshop will feature a series of engaging presentations, interactive discus
 | **Session 1** | `Section_1_LangGraph/` | Build drug discovery AI agents using LangGraph and the ReAct pattern |
 | **Session 2** | `Section_2_MCP/` | Expose those tools over MCP and connect agents across servers |
 
-Each session directory contains its own detailed `README.md` with full instructions, notebook guidance, and troubleshooting.
+Each session directory contains its own detailed `README.md` with full instructions.
 
 ---
 
@@ -112,7 +112,7 @@ All workshop materials run inside Docker containers. **No local Python environme
 
 Docker Desktop is the recommended way to run Docker on your personal machine. It includes everything you need: the Docker engine, CLI, and a graphical interface.
 
-#### 🍎 macOS
+#### macOS
 
 1. Go to [https://docs.docker.com/desktop/install/mac-install/](https://docs.docker.com/desktop/install/mac-install/)
 2. Choose the installer for your chip:
@@ -125,7 +125,7 @@ Docker Desktop is the recommended way to run Docker on your personal machine. It
    docker --version
    ```
 
-#### 🐧 Linux
+#### Linux
 
 Docker Desktop is available for Ubuntu, Debian, and Fedora.
 
@@ -139,7 +139,7 @@ Docker Desktop is available for Ubuntu, Debian, and Fedora.
 
 > Alternatively, you can install **Docker Engine** directly (without the Desktop GUI) by following [https://docs.docker.com/engine/install/](https://docs.docker.com/engine/install/). This is sufficient for running workshop containers.
 
-#### 🪟 Windows
+#### Windows
 
 1. Go to [https://docs.docker.com/desktop/install/windows-install/](https://docs.docker.com/desktop/install/windows-install/)
 2. Download the **Docker Desktop Installer**
@@ -198,7 +198,7 @@ The command returns the link such as `127.0.0.1:xxxxx`. Open it in your browser.
 
 ---
 
-For detailed content, notebook guidance, and troubleshooting, please refer to the `README.md` inside each session directory.
+For detailed content please refer to the `README.md` inside each session directory.
 
 ---
 
