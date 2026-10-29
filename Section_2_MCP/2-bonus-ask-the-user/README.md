@@ -1,51 +1,108 @@
-# Bonus 2: the server asks the user (multi round-trip requests)
+# Bonus 2: When a tool needs your input
 
-Since protocol revision 2026-07-28, an MCP server can no longer send requests to the client in the middle of a call. When a tool needs input from the user, the server **returns the question** instead:
+Sometimes, a tool needs a little more information before it can complete a task.
 
-1. The client calls the tool.
-2. The server answers with `resultType: "input_required"`, the question in `inputRequests`, and a signed `requestState`.
-3. The client asks the user, then sends the **same request again** with the answers in `inputResponses` and the `requestState` copied byte for byte.
-4. The server checks the signature, runs the tool, and returns `resultType: "complete"`.
+For example, imagine asking a tool to create a table of research papers. Before starting, it might need to know:
 
-This is called a multi round-trip request (MRTR). It replaces the old server-initiated `elicitation/create`, and it works behind load balancers because no connection has to stay open.
+- How far back should the search go?
+- How many papers should be included?
+- Should it include only open-access papers?
 
-## The example
+Instead of making these decisions for you, the tool can **ask you to confirm your preferences first**.
 
-`build_evidence_table` in `server.py` asks you to confirm the scope of an evidence table (earliest year, number of papers, open access only) before it searches. The question is declared with the SDK's `Resolve` and `Elicit` helpers:
+In this bonus exercise, you'll see how that works with MCP.
 
-```python
-async def ask_review_scope(research_question: str = config.DEFAULT_QUESTION) -> Elicit[ReviewScope]:
-    return Elicit(f'Build an evidence table for: "{research_question}". Confirm the scope.', ReviewScope)
+## 1. How does it work?
 
-@mcp.tool()
-async def build_evidence_table(scope: Annotated[ReviewScope, Resolve(ask_review_scope)], query: str = ..., ...):
-    ...
-```
+The process is quite simple:
 
-The `scope` parameter never appears in the tool's input schema. The SDK fills it from the user's answer.
+1. **You request something:** For example, an evidence table about a research topic.
+2. **The server asks a question:** It needs you to confirm a few details before continuing.
+3. **You provide your answers:** The client sends your choices back to the server.
+4. **The tool completes the task:** The server uses your answers to create the evidence table.
 
-## Run it
+Behind the scenes, this involves two requests to the server instead of one. This is called a *multi round-trip request* (MRTR).
 
-Start the reference server first (`python server.py`, or set `MCP_URL` to a deployed server).
+You don't need to understand the technical details to follow this exercise.
+
+## 2. What are we testing?
+
+We've already prepared a tool called `build_evidence_table` in `server.py`.
+
+The tool searches scientific literature and creates an evidence table. But before searching, it asks you to confirm:
+
+- **Earliest publication year:** How old can the papers be?
+- **Number of papers:** How many results do you want?
+- **Open access:** Do you only want papers that are freely available?
+
+The example code is provided, so you don't need to write anything yourself.
+
+## 3. Try it yourself
+
+First, make sure the reference server is running.
+
+If it isn't, open a terminal and run:
 
 ```bash
-python 2-bonus-ask-the-user/ask_the_user.py          # answer in the terminal; Enter keeps a default
-python 2-bonus-ask-the-user/ask_the_user.py --wire   # the same exchange as raw HTTP
+python server.py
 ```
 
-## What to look for
+Keep the server running. Open another terminal in the project folder and run:
 
-| You do | You should see |
+```bash
+python 2-bonus-ask-the-user/ask_the_user.py
+```
+
+You should see a few questions appear in the terminal.
+
+**Your task:**
+
+1. Read the questions.
+2. Enter your preferred values, or press **Enter** to keep the suggested defaults.
+3. Look at the evidence table generated using your choices.
+
+That's it! You've now seen how an MCP tool can ask for your input before completing a task.
+
+## 4. Want to see what happens behind the scenes? (Optional)
+
+You can also run:
+
+```bash
+python 2-bonus-ask-the-user/ask_the_user.py --wire
+```
+
+This shows the actual messages exchanged between the client and server.
+
+You may notice a few unfamiliar terms:
+
+| What you'll see | What it means |
 |---|---|
-| Call with the SDK client and a callback | The question in the terminal, then a numbered evidence table |
-| `--wire`, round 1 | `resultType: input_required`, the question under `inputRequests`, a long `requestState` |
-| Retry with a tampered `requestState` | Error `-32602`, "Invalid or expired requestState" |
-| Call without declaring elicitation | Error `-32021`: the client did not declare the capability this tool needs |
-| Retry with the original `requestState` | `resultType: complete` and the table |
+| `input_required` | The server needs an answer before it can continue |
+| `inputRequests` | The questions the server wants to ask |
+| `requestState` | Information that allows the server to safely continue the request |
+| `inputResponses` | The answers provided by the user |
+| `complete` | The tool has finished its task |
 
-## Things worth discussing
+The example also shows what happens when something goes wrong, such as changing the saved request information or calling a tool without supporting user questions.
 
-- **Capabilities are declared, not assumed.** Registering `elicitation_callback` is how a client says it can ask the user. Hosts that cannot ask (most plain agent loops) get `-32021` for this tool only; the other tools still work. That is why the workshop agent is not given this tool.
-- **Anything that passed through the client is attacker-controlled.** The SDK signs `requestState`, so a modified copy is refused.
-- **Several replicas.** By default the signing key is random per process, so a retry that lands on another replica, or arrives after a restart, fails. Set the same `MCP_STATE_KEY` on every replica.
-- **Credentials never travel through a form.** Use URL-mode elicitation (a browser flow) for anything secret.
+**Don't worry about understanding every message.** The important thing is to see how the server asks for information, receives an answer, and continues.
+
+## 5. A few things to keep in mind
+
+- **Not every application can ask questions.** The client must support this feature. Otherwise, the server will return an error for tools that require it.
+- **The server checks that requests are valid.** If someone changes the information needed to continue a request (`requestState`), the server rejects it.
+- **Sensitive information needs extra care.** Passwords and other secrets should not be collected through these ordinary questions.
+
+For those interested in the implementation, the example uses the MCP SDK's `Elicit` and `Resolve` helpers. The client uses an `elicitation_callback` to handle questions from the server. If you deploy multiple copies of the server, they also need to share the same `MCP_STATE_KEY` so requests can continue reliably.
+
+These details are optional for this workshop.
+
+## 6. What should you take away?
+
+**An MCP tool doesn't always have to do everything immediately.**
+
+Sometimes, the best approach is to ask the user for a little more information before continuing.
+
+This is particularly useful in research, where decisions such as publication dates, search limits, and inclusion criteria should often be made by the researcher rather than automatically.
+
+**For now, focus on running the example and observing what happens.** You can always come back to the code and technical details later.

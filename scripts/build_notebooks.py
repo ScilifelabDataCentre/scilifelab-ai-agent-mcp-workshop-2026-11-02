@@ -34,24 +34,64 @@ md(r'''
 
 **SciLifeLab hands-on workshop, Lund, 2 November 2026, 13:30 to 15:00**
 
-In Session 1 you built an agent. In this session you turn a research capability into a **reusable service** that any agent can call through the **Model Context Protocol (MCP)**. The service searches the life-science literature in Europe PMC, which covers PubMed, PubMed Central and preprints, so it works whatever your field is.
+<div align="center">
+  <a href="https://www.scilifelab.se/event/ai-agents-in-life-science-lund/">
+    <img src="../../assets/mcp-overview.png"
+         width="800"
+         alt="MCP Overview">
+    <img src="../../assets/mcp-workshop-overview.png"
+         width="800"
+         alt="MCP Workshop Overview">
+  </a>
+</div>
 
-By 15:00 you will have:
+## Welcome to Session 2: Connecting AI Agents to Scientific Tools
 
-1. inspected real MCP traffic (protocol revision 2026-07-28);
-2. built a typed MCP tool with the official Python SDK;
-3. called it without any language model;
-4. connected an agent to it;
-5. handled errors and checked that every citation is grounded;
-6. enforced a permission boundary that holds whatever the model does.
+In Session 1, you built your first AI agent. Today, we'll take it one step further!
 
-**How to work:** run the cells from top to bottom. Cells marked **GAP** are yours to complete. If you get stuck, `mcp_literature_review_solution.ipynb` has every gap filled in.
+You'll learn how to give your agent access to **scientific literature** using <underline>Europe PMC</underline>, a resource for finding research papers, including PubMed articles and preprints.
+
+We'll use **Model Context Protocol (MCP)**, which allows different AI agents and applications to use the same tools.
+
+### What will you learn today?
+
+By 15:00, you will have:
+
+1. **Explored MCP:** Seen how AI agents communicate with external tools.
+2. **Created a tool:** Built a simple tool for searching scientific papers.
+3. **Tested your tool:** Checked that it works, even without an AI model.
+4. **Connected your agent:** Given your AI agent access to the literature search tool.
+5. **Checked the results:** Learned how to identify errors and verify that the AI cites real papers.
+6. **Added safety checks:** Made sure your agent only performs actions it is allowed to do.
+
+### Don't worry about the technical details!
+
+This is a hands-on session. **For now, focus on running the notebook cells, observing the results, and experimenting.**
+
+You don't need to understand every line of code. You can always come back later to explore how things work in more detail.
+
+**The goal is to understand what MCP makes possible and how it can help you in your research!**
+
+### How to use this notebook
+
+- **Follow along:** Run the cells one by one, from top to bottom.
+- **Try it yourself:** When you see **GAP**, it's your turn to complete the missing code.
+- **Need help?** Don't worry if you get stuck! The notebook `mcp_literature_review_solution.ipynb` contains all the answers.
+
+**Remember:** The goal is to learn by doing, not to get everything right on the first try!
 ''')
 
 md(r'''
-## Part 0. Set up (5 minutes)
+## Part 0. Set up
 
-The first cell finds the session folder and imports the helpers. The second cell is **your input**: your own research question and Europe PMC query. Leave them empty to use the workshop defaults.
+### Getting started
+
+The first two cells prepare your notebook:
+
+1. **First cell:** Sets things up automatically. Just run it!
+2. **Second cell:** Add your own research question and a search query for Europe PMC.
+
+**Not sure what to write?** Leave the fields empty to use the example questions provided for the workshop.
 ''')
 
 code(r'''
@@ -74,12 +114,20 @@ print("Europe PMC mode:", config.MODE)
 ''')
 
 md(r'''
-**Your input.** Some examples from other fields, to adapt:
+### Try your own research topic!
 
-- `"spatial transcriptomics" AND (brain OR cortex)`
-- `"antimicrobial resistance" AND wastewater AND surveillance`
-- `(Arabidopsis OR "Arabidopsis thaliana") AND "drought tolerance" AND CRISPR`
-- `"gut microbiome" AND "Parkinson disease"`
+You can search for papers related to your own research.
+
+Here are a few example searches from different fields:
+
+- **Neuroscience:** `"spatial transcriptomics" AND (brain OR cortex)`
+- **Microbiology:** `"antimicrobial resistance" AND wastewater AND surveillance`
+- **Plant biology:** `(Arabidopsis OR "Arabidopsis thaliana") AND "drought tolerance" AND CRISPR`
+- **Medical research:** `"gut microbiome" AND "Parkinson disease"`
+
+**Your turn:** Choose an example or write a search query related to your own research.
+
+**Not sure what to choose?** Leave the fields empty to use the workshop examples. You can always experiment with your own topic later!
 ''')
 
 code(r'''
@@ -95,7 +143,15 @@ print("Europe PMC query: ", QUERY)
 ''')
 
 md(r'''
-**Preflight.** Find (or start) the reference server, check that Europe PMC answers, and check the language model with one real tool call. A text reply to "ping" would not prove that tool calling works.
+### Checking that everything is ready
+
+Before we begin, let's make sure everything is working:
+
+1. **MCP server:** Check that the server is running (or start it if needed).
+2. **Europe PMC:** Check that we can connect to the research literature database.
+3. **AI model:** Check that the model can respond and use a tool.
+
+If everything works, you're ready to continue!
 ''')
 
 code(r'''
@@ -105,21 +161,29 @@ ws.check_europepmc()                  # one small search: live, from the cache, 
 ''')
 
 code(r'''
-llm = ws.make_llm()            # explicit provider: OpenLLM, unless you deliberately set LLM_PROVIDER=openai
+llm = ws.make_llm()            # explicit provider: OpenLLM
 ws.check_tool_calling(llm)     # one real tool call
 ''')
 
 # ---------------------------------------------------------------------------
 md(r'''
-## Part 1. Under the hood: one request at a time (10 minutes)
+## Part 1. Under the hood: one request at a time
 
-The reference server (`server.py`) is running. Before you build anything, look at what MCP actually sends. Since revision 2026-07-28 MCP is **stateless**:
+The example server (`server.py`) is already running.
 
-- one HTTP POST per request, with no handshake and no session;
-- every request carries its protocol version and capabilities in `params._meta`;
-- headers repeat the essentials so gateways can route without reading the body: `MCP-Protocol-Version`, `Mcp-Method`, and `Mcp-Name` for tool calls;
-- every result states whether it is complete (`resultType`);
-- `server/discover` tells a client what the server supports.
+**For now, simply run the cells below in order.** You don't need to understand the technical details at this stage. You can always come back to this section later if you'd like to explore how MCP works in more detail.
+
+### How does MCP work? (Optional reading)
+
+Since the July 28, 2026 update, MCP works in a **stateless** way. In simple terms:
+
+- **Each request is independent:** The client sends a request and receives a response, without needing to establish a session first.
+- **Requests include basic information:** Each request specifies the protocol version and the client's capabilities.
+- **Headers help direct requests:** Important information is repeated in the HTTP headers so requests reach the right place.
+- **Responses indicate completion:** Each response tells the client whether the result is complete.
+- **Clients can discover available features:** The `server/discover` method lets clients find out what the server supports.
+
+**Don't worry about these details for now. Just execute the cells below and observe the results!**
 ''')
 
 code(r'''
@@ -146,11 +210,15 @@ ws.show(status, reply, max_chars=1800)
 ''')
 
 md(r'''
-**Break it.** Predict what happens, then run the cell:
+### Let's see what happens when something goes wrong!
 
-1. the `Mcp-Name` header names a different tool than the body;
-2. a protocol version the server does not speak;
-3. `ping`, which no longer exists in 2026-07-28.
+Before running the next cell, try to guess what will happen in these three cases:
+
+1. **Wrong tool name:** The tool name in the header is different from the one in the request.
+2. **Wrong protocol version:** The request uses a version the server doesn't support.
+3. **Unknown command:** The request uses `ping`, a command that is no longer supported.
+
+**Now run the cell below and observe the results.** Don't worry if you don't understand the errors yet. You can come back to them later!
 ''')
 
 code(r'''
@@ -162,15 +230,19 @@ print(ws.error_summary(*ws.raw_request(MCP_URL, "ping")))
 
 # ---------------------------------------------------------------------------
 md(r'''
-## Part 2. Checkpoint 1: build your own server (20 minutes)
+## Part 2. Checkpoint 1: build your own server
 
-With the official SDK, a tool is an ordinary Python function:
+### Creating a tool with Python
 
-- the **type hints** become the tool's input schema;
-- the **docstring** becomes the description that the model reads when it chooses a tool;
-- the **return type** (a Pydantic model) becomes the output schema, so clients get structured fields instead of free text.
+With the official MCP SDK, creating a tool is similar to writing a regular Python function.
 
-The Europe PMC helper (`litreview/europepmc.py`) is provided. It validates input, enforces limits, and returns plain dictionaries.
+There are three main things to know:
+
+- **Type hints:** Define what information the tool needs (its inputs).
+- **Docstring:** Explains what the tool does, helping the AI decide when to use it.
+- **Return type:** Defines what the tool gives back (its output), in a structured format.
+
+We've already provided a helper file (`litreview/europepmc.py`) that handles searching Europe PMC, checking inputs, and limiting results.
 ''')
 
 code(r'''
@@ -217,7 +289,7 @@ async def search_literature(query: str = config.DEFAULT_QUERY, max_results: int 
 ''')
 
 md(r'''
-A second tool is provided, so your server has more than one.
+We've also provided a second tool, so your server can now do more than one task.
 ''')
 
 code(r'''
@@ -235,7 +307,14 @@ async def get_paper(paper_id: str) -> PaperLookup:
 ''')
 
 md(r'''
-**Resources** are context that the application provides, such as documents or reference data. Tools are actions that the model chooses. Here the query-syntax guide becomes a resource.
+### Adding a resource
+
+MCP provides two ways to help the AI:
+
+- **Tools:** Allow the AI to perform tasks, such as searching for research papers.
+- **Resources:** Provide useful information, such as documents, instructions, or reference guides.
+
+In this example, we'll add a guide that explains how to search for papers using Europe PMC.
 ''')
 
 gap(r'''
@@ -256,9 +335,15 @@ def query_syntax_guide() -> str:
 
 # ---------------------------------------------------------------------------
 md(r'''
-## Part 3. Checkpoint 2: call it without a language model (10 minutes)
+## Part 3. Checkpoint 2: call it without a language model
 
-A good MCP server is useful without AI. The SDK's `Client` connects to your server object directly, in memory: no port, no subprocess, no model. This is also how you test a server.
+### Testing your MCP server
+
+You can test your MCP server **without using AI**.
+
+The SDK provides a `Client` that connects directly to your server, making it easy to check whether your tools work correctly.
+
+You don't need to start a separate server or connect to an AI model.
 ''')
 
 code(r'''
@@ -309,16 +394,30 @@ print(ws.resource_text(guide)[:900])
 ''')
 
 md(r'''
-**Discuss with your neighbour:** what does `structured_content` give a client that a block of text does not? Which fields would a reviewer of your answer want to see?
+### Discuss with your neighbour
+
+- **Organized information:** Why might it be easier to work with information presented in separate fields (`structured_content`) rather than one long block of text?
+- **Checking results:** What details would help someone verify your results? For example, article titles, authors, publication dates, or links to the original papers.
+
+**Don't worry about finding the perfect answer.** Just share your thoughts!
 ''')
 
 # ---------------------------------------------------------------------------
 md(r'''
-## Part 4. Checkpoint 3: connect your agent (15 minutes)
+## Part 4. Checkpoint 3: connect your agent
 
-Now the agent from Session 1 gets the literature tools. `MCPAdapter` (LangChain 1.4, beta) connects to the complete reference server over Streamable HTTP and turns its MCP tools into LangChain tools. The same few lines work for any MCP server.
+### Connecting your AI agent to the literature tools
 
-The **harness** around the model decides what the model must not decide alone: which provider runs, which tools are allowed, how many steps a run may take, and what gets recorded.
+Now we'll give the AI agent from Session 1 access to the literature search tools.
+
+We use **MCPAdapter** to connect the agent to the MCP server, allowing it to use the available tools.
+
+We also set some basic rules for the agent, such as:
+
+- **AI model:** Which model the agent uses.
+- **Available tools:** What the agent is allowed to do.
+- **Step limit:** How many actions the agent can take.
+- **Record keeping:** What information is saved during the process.
 ''')
 
 code(r'''
@@ -357,19 +456,29 @@ if run is not None:
 ''')
 
 md(r'''
-**Read the trace.** Which queries did the agent send? Did it read abstracts with `get_paper` before answering? Did it cite PMIDs?
+### Let's see what the agent did!
+
+Look at the results from the previous cell and check:
+
+1. **Searches:** What did the agent search for?
+2. **Reading papers:** Did it use `get_paper` to read any abstracts before answering?
+3. **References:** Did it include PMIDs (PubMed IDs) so you can find the original papers?
 ''')
 
 # ---------------------------------------------------------------------------
 md(r'''
-## Part 5. Checkpoint 4: errors and evidence (10 minutes)
+## Part 5. Checkpoint 4: errors and evidence
 
-Two kinds of "nothing" must never be confused:
+### Understanding search results and errors
 
-- `status: no_results` is a real answer: the search ran and found nothing;
-- a tool error such as `upstream_error` means the search **failed**. It is not evidence that no papers exist.
+When searching for papers, it's important to understand the difference between:
 
-Invalid input is refused by the server with a clear message, whatever the model sends.
+- **No results (`no_results`):** The search worked, but no papers were found.
+- **Search error (`upstream_error`):** Something went wrong, so we don't know whether relevant papers exist.
+
+If the agent sends an incorrect request, the server will reject it and explain why.
+
+**Remember:** A failed search does not mean there are no papers!
 ''')
 
 code(r'''
@@ -386,7 +495,11 @@ print("Upstream outage  ->", ws.is_error(down), "|", ws.text_of(down)[:200])
 ''')
 
 md(r'''
-**Grounding.** An answer is only as good as its citations. Check that every identifier the agent cited was actually returned by a tool during the run.
+### Checking the agent's references
+
+AI can sometimes cite papers it hasn't actually found.
+
+To make sure the answer is reliable, we need to check that **every paper ID (PMID) mentioned in the answer** was returned by one of the literature tools.
 ''')
 
 gap(r'''
@@ -425,11 +538,18 @@ print("Unsupported:", unsupported or "none: every cited identifier came from a t
 
 # ---------------------------------------------------------------------------
 md(r'''
-## Part 6. Checkpoint 5: a permission boundary that holds (10 minutes)
+## Part 6. Checkpoint 5: a permission boundary that holds
 
-Tool results are **untrusted input**. A record, a comment or a web page can contain instructions aimed at the model (prompt injection). You cannot rely on the model to resist. You can rely on a deterministic gate that checks every tool call before it runs.
+### Keeping the AI agent safe
 
-Below, a simulated tool returns reader comments with a planted instruction, and a second tool can send text to a URL. The gate allows only approved tools, and only approved destinations.
+Sometimes, information from websites, documents, or comments can contain hidden instructions that try to trick the AI. This is called **prompt injection**.
+
+We shouldn't rely on the AI alone to recognize these instructions. Instead, we can add a **safety check** that controls:
+
+- **Which tools** the AI is allowed to use.
+- **Where information** can be sent.
+
+In this example, a simulated tool returns a comment containing a hidden instruction. We'll see how the safety check prevents the agent from performing an unauthorized action.
 ''')
 
 code(r'''
@@ -496,7 +616,17 @@ print("Allowed: lab-notebook.example.org")
 ''')
 
 md(r'''
-**Why not just filter suspicious words?** Run the cell: a keyword filter misses a paraphrase and flags an innocent sentence. Filters can help you notice attacks; only the gate enforces a boundary.
+### Why isn't checking for suspicious words enough?
+
+We might try to detect unsafe instructions by looking for certain words. But this doesn't always work:
+
+- **Missed threats:** Harmful instructions can use different words to avoid detection.
+- **False alarms:** Harmless sentences might contain words that seem suspicious.
+
+Word filters can help identify possible problems, but **safety checks are needed to block unauthorized actions**.
+
+**Run the cell below and observe what happens.**
+
 ''')
 
 code(r'''
@@ -513,9 +643,17 @@ for label, text in samples.items():
 md(r'''
 ## Part 7 (optional). Ask the user: multi round-trip requests
 
-In 2026-07-28 a server can no longer call the client in the middle of a request. When it needs input from the user, it **returns the question** (`resultType: input_required`), and the client retries the same request with the answers. A signed `requestState` carries what the server needs to continue.
+### Asking the user for confirmation
 
-`build_evidence_table` asks you to confirm the scope before it builds a table. Only clients that declare elicitation support may call it, and registering an `elicitation_callback` is that declaration.
+Sometimes, an MCP tool needs more information from you before it can continue.
+
+Instead of guessing, the tool can **ask you a question**, wait for your answer, and then continue.
+
+In this example, the `build_evidence_table` tool asks you to confirm which papers should be included before creating the table.
+
+The client needs to support this interaction so it can pass your answer back to the tool.
+
+**For now, just run the cells below and see how the confirmation works.** 
 ''')
 
 code(r'''
@@ -540,7 +678,15 @@ else:
 ''')
 
 md(r'''
-**The same exchange on the wire.** Round 1 returns the question. Round 2 sends the answers together with the `requestState`. A tampered `requestState` is refused: anything that passed through the client is attacker-controlled.
+### How does the confirmation work?
+
+Let's see how the tool asks for confirmation and continues:
+
+1. **First request:** The tool asks you a question.
+2. **Second request:** Your answer is sent back with information (`requestState`) that helps the server continue.
+3. **Security check:** If that information has been changed, the server rejects it.
+
+This helps make sure the process is safe and the information hasn't been modified.
 ''')
 
 code(r'''
@@ -575,23 +721,35 @@ print("Round 2: HTTP", status, "| resultType:", round2.get("resultType"),
 md(r'''
 ## Part 8. Wrap-up
 
-You have built and used every layer of an MCP integration:
+### What have we learned?
 
-| Layer | In this notebook |
-|---|---|
-| Scientific code | `litreview/europepmc.py` |
-| MCP server | your `my_server`, and the reference `server.py` |
-| Client without a model | `Client(my_server)` |
-| Agent and harness | `create_agent` with approved tools, a run budget and a policy gate |
-| Protocol | the raw requests in Part 1 |
+Congratulations! You've now explored how to connect an AI agent to scientific tools using MCP.
 
-**Next steps:**
+Throughout this notebook, you've worked with:
 
-- `3-bonus-one-server-many-hosts/`: the same server used by several hosts (Python, LangChain, Deep Agents, OpenCode, Open WebUI, VS Code), and how it is deployed on SciLifeLab Serve.
-- `2-bonus-ask-the-user/`: the multi round-trip example as a script.
-- From a terminal: `python agent_demo.py "your research question"`.
+- **Scientific code:** Python functions that search for research papers.
+- **MCP server:** Makes these functions available to other applications.
+- **MCP client:** Connects to the server and tests its tools.
+- **AI agent:** Uses the tools to answer research questions.
+- **Safety checks:** Control what the agent is allowed to do.
+- **MCP protocol:** Defines how the different parts communicate.
 
-**Take home:** an MCP server pays off when a capability should be reused by several agents or tools. For a single notebook, plain Python functions are enough.
+### Want to explore further?
+
+You can try these optional exercises:
+
+- **More examples:** Explore the `2-bonus-ask-the-user/` folder to see how a tool asks for user input.
+- **Ask your own research question:** Open a terminal and run:
+
+  `python agent_demo.py "your research question"`
+
+### Key takeaway
+
+**MCP makes it easier to reuse the same scientific tools across different AI agents and applications.**
+
+But you don't always need MCP! If you're only working in a single notebook, regular Python functions may be enough.
+
+**Don't worry if you haven't understood every detail.** The goal was to see how the pieces fit together. You can always revisit the notebook when you want to explore further!
 ''')
 
 
