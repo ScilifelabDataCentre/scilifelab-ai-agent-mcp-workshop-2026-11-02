@@ -16,9 +16,9 @@ Five checkpoints cover:
 
 ## Getting started
 
-1. Open the workshop notebook and run cells from top to bottom.
+1. Open the workshop notebook `1-mcp-hands-on/mcp_literature_review_lab.ipynb` and run cells from top to bottom.
 2. Complete the sections marked `GAP`.
 3. Use your own research question and query, or leave them empty for the defaults.
-4. If needed, consult `mcp_literature_review_solution.ipynb` for completed solutions.
+4. If needed, consult `1-mcp-hands-on/mcp_literature_review_solution.ipynb` for completed solutions.
 
 The reference MCP server is provided in `server.py`. Europe PMC requires no API key.
