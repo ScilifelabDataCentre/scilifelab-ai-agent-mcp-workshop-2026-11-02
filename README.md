@@ -196,6 +196,23 @@ The command returns the link such as `127.0.0.1:xxxxx`. Open it in your browser.
 
 **Remember: Your link will be different from this example shown above. Make sure to use the correct link in the browser**.
 
+### Step 4: If you want to replace your current `.env` file
+
+Open a **Terminal inside JupyterLab** (not your computer’s own Terminal). Copy and paste this entire block, replacing `sk-...` with your key:
+
+```bash
+cat > /home/workshop/app/.env <<'EOF'
+OPENLLM_API_KEY=sk-...
+OPENLLM_BASE_URL=https://openllm.scilifelab.se/api
+OPENLLM_MODEL=Qwen3-235B-A22B
+OPENLLM_DISABLE_THINKING=1
+EOF
+
+chmod 600 /home/workshop/app/.env
+```
+
+This replaces the entire `.env` file. Both workshop sections share this one file. Restart your notebook kernel and rerun the setup cells.
+
 ---
 
 For detailed content please refer to the `README.md` inside each session directory.
