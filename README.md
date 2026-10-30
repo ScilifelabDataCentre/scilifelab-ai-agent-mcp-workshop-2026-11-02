@@ -224,6 +224,7 @@ chmod 600 /home/workshop/app/.env
 - **Existing settings:** This command will **overwrite your current `.env` file**, so only use it if you want to replace the existing settings.
 
 **That's it!** Your new settings are now saved in the `.env` file. You need to restart your notebook kernel for the changes to take effect.
+
 ---
 
 For detailed content please refer to the `README.md` inside each session directory.
