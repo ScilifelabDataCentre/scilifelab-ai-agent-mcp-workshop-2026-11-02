@@ -212,6 +212,8 @@ OPENLLM_BASE_URL=https://openllm.scilifelab.se/api
 OPENLLM_MODEL=Qwen3-235B-A22B
 OPENLLM_DISABLE_THINKING=1
 EOF
+
+chmod 600 /home/workshop/app/.env
 ```
 
 **A few things to remember:**
