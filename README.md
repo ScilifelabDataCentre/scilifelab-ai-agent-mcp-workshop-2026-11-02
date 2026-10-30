@@ -196,9 +196,14 @@ The command returns the link such as `127.0.0.1:xxxxx`. Open it in your browser.
 
 **Remember: Your link will be different from this example shown above. Make sure to use the correct link in the browser**.
 
-### Step 4: If you want to replace your current `.env` file
+### Step 4 (Optional): Update your `.env` file
 
-Open a **Terminal inside JupyterLab** (not your computer’s own Terminal). Copy and paste this entire block, replacing `sk-...` with your key:
+If you need to update your API key or change the language model settings, you can create a new `.env` file.
+
+1. Open a **Terminal inside JupyterLab** (not your computer's Terminal).
+2. Copy the entire command below.
+3. Replace `sk-...` with your own API key.
+4. Paste the command into the Terminal and press **Enter**.
 
 ```bash
 cat > /home/workshop/app/.env <<'EOF'
@@ -207,12 +212,16 @@ OPENLLM_BASE_URL=https://openllm.scilifelab.se/api
 OPENLLM_MODEL=Qwen3-235B-A22B
 OPENLLM_DISABLE_THINKING=1
 EOF
-
-chmod 600 /home/workshop/app/.env
 ```
 
-This replaces the entire `.env` file. Both workshop sections share this one file. Restart your notebook kernel and rerun the setup cells.
+**A few things to remember:**
 
+- **API key:** Replace `sk-...` with your actual key. Keep this key private.
+- **Model:** You can change `OPENLLM_MODEL` if you want to use another supported model.
+- **Other providers:** If you want to use a different LLM provider later, you may need to update the API key, URL, and model name accordingly.
+- **Existing settings:** This command will **overwrite your current `.env` file**, so only use it if you want to replace the existing settings.
+
+**That's it!** Your new settings are now saved in the `.env` file. You need to restart your notebook kernel for the changes to take effect.
 ---
 
 For detailed content please refer to the `README.md` inside each session directory.
