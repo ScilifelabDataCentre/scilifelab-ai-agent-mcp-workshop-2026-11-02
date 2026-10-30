@@ -196,6 +196,8 @@ The command returns the link such as `127.0.0.1:xxxxx`. Open it in your browser.
 
 **Remember: Your link will be different from this example shown above. Make sure to use the correct link in the browser**.
 
+---
+
 ### Step 4 (Optional): Update your `.env` file
 
 If you need to update your API key or change the language model settings, you can create a new `.env` file.
@@ -223,7 +225,7 @@ chmod 600 /home/workshop/app/.env
 - **Other providers:** If you want to use a different LLM provider later, you may need to update the API key, URL, and model name accordingly.
 - **Existing settings:** This command will **overwrite your current `.env` file**, so only use it if you want to replace the existing settings.
 
-**That's it!** Your new settings are now saved in the `.env` file. You need to restart your notebook kernel for the changes to take effect.
+Your new settings are now saved in the `.env` file. You need to restart your notebook kernel for the changes to take effect.
 
 ---
 
