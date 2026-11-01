@@ -180,7 +180,7 @@ docker run -d \
   --name ai-agents-workshop \
   -e OPENLLM_API_KEY="sk-..." \
   -e OPENLLM_BASE_URL="https://openllm.scilifelab.se/api" \
-  -e OPENLLM_MODEL="Qwen3-235B-A22B" \
+  -e OPENLLM_MODEL="Qwen/Qwen3.8-27B" \
   -e WORKSHOP_LOCAL_NO_AUTH=1 \
   -p 127.0.0.1::7860 \
   -v "$PWD/work:/home/workshop/app/work" \
@@ -211,7 +211,7 @@ If you need to update your API key or change the language model settings, you ca
 cat > /home/workshop/app/.env <<'EOF'
 OPENLLM_API_KEY=sk-...
 OPENLLM_BASE_URL=https://openllm.scilifelab.se/api
-OPENLLM_MODEL=Qwen3-235B-A22B
+OPENLLM_MODEL=Qwen/Qwen3.8-27B
 OPENLLM_DISABLE_THINKING=1
 EOF
 
