@@ -143,7 +143,7 @@ jobs:
             docker exec "${NAME}" python -c "from pathlib import Path; root=Path('/home/workshop/app'); assert (root/'Section_1_LangGraph/langgraph_lab.ipynb').is_file(); assert (root/'Section_2_MCP/1-mcp-hands-on/mcp_literature_review_lab.ipynb').is_file(); assert not any((root/path).exists() for path in ('Section_2_MCP/Dockerfile', 'Section_2_MCP/scripts', 'Section_2_MCP/tests', 'Section_2_MCP/.github'))"
             READY=0
             for i in $(seq 1 120); do
-              if curl --fail --silent --show-error http://127.0.0.1:7860/login >/dev/null; then
+              if curl --fail --silent --show-error http://127.0.0.1:7860/lab >/dev/null; then
                 docker exec "${NAME}" python scripts/workshop_healthcheck.py
                 READY=1
                 break
