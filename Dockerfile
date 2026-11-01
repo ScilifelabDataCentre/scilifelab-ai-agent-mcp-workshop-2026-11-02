@@ -12,6 +12,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     MCP_PORT=8000 \
     MCP_URL=http://127.0.0.1:8000/mcp \
     JUPYTER_PORT=7860 \
+    WORKSHOP_LOCAL_NO_AUTH=1 \
     OPENLLM_BASE_URL=https://openllm.scilifelab.se/api \
     OPENLLM_MODEL=Qwen3-235B-A22B \
     OPENLLM_DISABLE_THINKING=1
