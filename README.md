@@ -85,7 +85,14 @@ The workshop will feature a series of engaging presentations, interactive discus
 
 ## Download Presentation Slides
 
-**Presentation slides will be here after the workshop**
+[**Presentation 1** — Introduction: Exploring how AI agents can transform life sciences · *Johan Alfredéen*](assets/slides-Introduction-Exploring-how-AI-agents-can-transform-life sciences-Johan-Alfredéen-20261102.pdf)
+
+[**Demonstration** — AI agents in action · *Mahbub Ul Alam*](assets/slides-AI-agents-in-action-Mahbub-Ul-Alam-20261102.pdf)
+
+[**Hands-on Session 2** — AI agent collaboration with the Model Context Protocol (MCP) · *Mahbub Ul Alam, Johan Alfredéen, Dinh Long Huynh*](assets/slides-AI-agent-collaboration-with-the-Model-Context-Protocol-(MCP)-Mahbub-Ul-Alam-20261102.pdf)
+
+[**Presentation 2** — Deploying AI Agents: Legal, Technical, and Practical Considerations · *Johan Alfredéen*](assets/slides-Deploying-AI-Agents.-Legal,-technical,-and-practical-considerations.-Johan-Alfredéen-20261102.pdf)
+
 
 ---
 
