@@ -4,7 +4,7 @@
 # MCP and agent frameworks
 mcp[cli]==2.3.0
 fastmcp==4.1.3
-langchain[mcp]==1.4.6
+langchain[mcp]==1.4.7
 langchain-openai==1.7.2
 langgraph==1.2.16
 deepagents>=0.7,<0.8
