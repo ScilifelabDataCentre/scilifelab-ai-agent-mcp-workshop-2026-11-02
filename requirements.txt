@@ -22,7 +22,7 @@ pandas==3.0.0
 pubchempy==1.0.5
 chembl-webresource-client==0.10.9
 tqdm==4.67.1
-rdkit==2025.9.4
+rdkit==2025.9.6
 matplotlib==3.10.8
 seaborn==0.13.2
 numpy==2.4.0
