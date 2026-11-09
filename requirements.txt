@@ -27,4 +27,4 @@ matplotlib==3.10.8
 seaborn==0.13.2
 numpy==2.4.0
 scipy==1.17.0
-biopython==1.86
+biopython==1.88
