@@ -10,7 +10,7 @@ langgraph==1.2.16
 deepagents>=0.7,<0.8
 
 # Jupyter and shared utilities
-jupyterlab==4.5.11
+jupyterlab==4.6.6
 ipykernel==7.4.0
 python-dotenv==1.2.2
 requests==2.33.1
